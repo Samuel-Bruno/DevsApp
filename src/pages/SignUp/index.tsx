@@ -6,7 +6,7 @@ import getStateProperty from '../../redux/getStateProperty';
 import * as S from './styled'
 
 
-const Login = () => {
+const SignUp = () => {
 
   const store = useStore()
   const navigation = useNavigate()
@@ -14,8 +14,10 @@ const Login = () => {
 
   const Api = useApi()
 
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
 
 
   useEffect(() => {
@@ -25,35 +27,48 @@ const Login = () => {
     }
   }, [])
 
+  const handleNameInput = (t: string) => {
+    // apply mask
+    setName(t)
+  }
   const handleEmailInput = (t: string) => {
     // apply mask
     setEmail(t)
   }
 
-  const handlePassInput = (t: string) => {
+  const handlePassInput = (t: string, field: 'p1' | 'p2') => {
     // apply mask
-    setPassword(t)
+    switch (field) {
+      case 'p1':
+        setPassword(t)
+        break
+      case 'p2':
+        setConfirmPassword(t)
+        break
+    }
   }
 
   const handleSubmit = async () => {
 
-    if (email && password) {
-      const login = await Api.login(email, password)
+    if (name && email && confirmPassword && password === confirmPassword) {
+      const subscribe = await Api.signup({ name, email, password })
 
-      if (login.success) {
+      if (subscribe.success) {
         dispatch({
           type: 'SET_LOGGED',
           payload: {
             isLogged: true,
-            userData: login.user
+            userData: subscribe.user
           }
         })
 
-        Api.saveToken(login.user?.token as string)
+        Api.saveToken(subscribe.user?.token as string)
         navigation('/')
       } else {
-        console.log(login.error)  // switch cases
+        console.log("Erro no cadastro — ", subscribe.error)
       }
+    } else {
+      alert("Preencha todos os campos")
     }
   }
 
@@ -69,8 +84,13 @@ const Login = () => {
           Phasellus pellentesque dolor lacus, sit amet consectetur erat vestibulum quis. Nam sit amet consectetur velit. Curabitur pulvinar velit eu eros maximus tincidunt.</p>
       </S.Main>
       <S.Aside>
-        <h3>Login</h3>
+        <h3>Cadastro</h3>
         <S.Form onSubmit={e => e.preventDefault()}>
+          <S.FormInput
+            placeholder='Digite seu nome'
+            value={name}
+            onChange={e => handleNameInput(e.target.value)}
+          />
           <S.FormInput
             placeholder='Digite seu email'
             value={email}
@@ -79,14 +99,20 @@ const Login = () => {
           <S.FormInput
             placeholder='Digite sua senha'
             value={password}
-            onChange={e => handlePassInput(e.target.value)}
+            onChange={e => handlePassInput(e.target.value, 'p1')}
             type={'password'}
           />
-          <S.FormBtn onClick={handleSubmit}>Entrar</S.FormBtn>
+          <S.FormInput
+            placeholder='Confirme sua senha'
+            value={confirmPassword}
+            onChange={e => handlePassInput(e.target.value, 'p2')}
+            type={'password'}
+          />
+          <S.FormBtn onClick={handleSubmit}>Cadastrar</S.FormBtn>
           <Link
-            to={'/signup'}
+            to={'/login'}
             id="link"
-          >Não tem uma conta?</Link>
+          >Já tem uma conta?</Link>
         </S.Form>
       </S.Aside>
       <S.Footer>
@@ -98,4 +124,4 @@ const Login = () => {
 }
 
 
-export default Login
+export default SignUp

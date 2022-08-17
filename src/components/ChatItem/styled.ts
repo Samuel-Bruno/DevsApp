@@ -8,6 +8,7 @@ export const Box = styled.div`
   margin-bottom:5px;
   border-radius:5px;
   margin-right:10px;
+  overflow:hidden;
 
   flex-wrap:nowrap;
   min-width:0;
@@ -16,9 +17,12 @@ export const Box = styled.div`
 
   transition: background-color .3s;
   
-  &:hover {
+  &:hover,
+  &.active {
     background-color:rgba(21, 45, 58, 0.5);
+  }
 
+  &:hover {
     .optionsArea {
       display:flex;
     }

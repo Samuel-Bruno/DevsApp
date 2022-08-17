@@ -16,84 +16,121 @@ import ChatArea from '../../components/ChatArea'
 
 import useApi from '../../api/api'
 
+import { UserChatList } from '../../types/chat/UserChatList'
+
 import { ChatInfo } from '../../types/reducers/chatsReducer'
 import { UserChatList as Chat } from '../../types/chat/UserChatList'
 import { Message } from '../../types/chat/messages'
-import { UserData } from '../../types/api/loginRes'
 
 
 const ChatPage = () => {
-  console.log("Rendered")
 
   const Api = useRef(useApi()).current
   const dispatch = useRef(useDispatch()).current
 
   const userData = useSelector((state: RootState) => state.user.data)
-  const chatsData = useSelector((state: RootState) => state.chat.chats)
+  const chatsState = useSelector((state: RootState) => state.chat?.chats)
 
   const [userOptionsOpened, setUserOptionsOpened] = useState(false)
-  const [chatsList, setChatsList] = useState<Chat[]>([])
+  const [addChatOpened, setAddChatOpened] = useState(false)
+  const [chatsList, setChatsList] = useState<any[]>([])
   const [pickedChat, setPickedChat] = useState<null | { id: string, key: number }>(null)
-  const [openedChat, setOpenedChat] = useState<null | ChatInfo>(null)
+  const [openedChat, setOpenedChat] = useState<ChatInfo | null>(null)
+  const [newEmailChat, setNewEmailChat] = useState('')
 
-  const handleChatPick = (chat: Chat, k: number) => {
-    setPickedChat({ id: chat.chatId as string, key: k })
-    updateChatView(chat)
-  }
 
-  const parseChatsToChatsList = ({ chats, fromUserData }:
-    { chats: ChatInfo[], fromUserData: false } |
-    { chats: Chat[], fromUserData: true }
-  ) => {
+  useEffect(() => {
 
-    let list: any[] = []
-
-    if (fromUserData === false) {
-      chats.forEach((chat) => {
-        // const chatName = await Api.getUserName(chat.users.filter(u => u !== userData.id)[0])
-        // const chatPhoto = await Api.getChatPhoto(userData.id, chat.id as string)
-        const lastMsg = chat.messages[chat.messages.length - 1]
-
-        list.push({
-          chatId: chat.id as string,
-          chatLastMsg: lastMsg.body,
-          // chatName: chatName,
-          lastMessageDate: lastMsg.date,
-          // photoUrl: chatPhoto,
+    const getChats = async () => {
+      let req = await Api.getUserChats(userData.id)
+      if (req.success) {
+        dispatch({
+          type: 'SET_CHATS',
+          payload: {
+            chats: req.chats
+          }
         })
-      })
-    } else {
-      chats.forEach((c) => {
-        // const chatPhoto = await Api.getChatPhoto(userData.id, c.chatId as string)
-
-        list.push({
-          chatId: c.chatId,
-          chatLastMsg: c.chatLastMsg,
-          // chatName: c.chatName,
-          lastMessageDate: c.lastMessageDate,
-          // photoUrl: chatPhoto,
-        })
-      })
+      }
     }
 
-    return list
+    getChats()
+    // let teste = parseToChatList(userData.id, chatsState)
+    // setChatsList(teste)
+    setChatsList(userData.chats)
+  }, [userData, Api, dispatch])
+
+  useEffect(() => {
+    let opnChat = chatsState.find(c => c.id === openedChat?.id)
+    if (opnChat !== undefined) setOpenedChat(opnChat)
+  }, [chatsState, openedChat])
+
+
+  const parseToChatList = (loggedUserId: string, chatState: ChatInfo[]): Chat[] => {
+
+    let res: Chat[] = []
+
+    chatState.forEach(async chat => {
+      let chatWith = chat.users.filter(user => user !== loggedUserId)[0]
+      const userName = await Api.getUserName(chatWith)
+      const chatPhoto = await Api.getChatPhoto(loggedUserId, chat.id as string)
+      const lastMsg: Message = chat.messages[chat.messages.length - 1]
+
+      let chatObj: Chat = {
+        chatId: chat.id as string,
+        chatLastMsg: lastMsg.body,
+        chatName: userName,
+        lastMessageDate: lastMsg.date,
+        photoUrl: chatPhoto
+      }
+      res.push(chatObj)
+    })
+
+    return res
   }
 
-  const updateChatView = (chat?: Chat) => {
+  const handleChatPick = (chat: UserChatList, k: number) => {
+    updateChatView(chat)
+    setPickedChat({
+      id: chat.chatId,
+      key: k
+    })
+  }
+
+  const updateChatView = (chat?: UserChatList) => {
     let chatItem = (chat) ?
-      chatsData.find(c => c.id === chat?.chatId) :
-      chatsData.find(c => c.id === openedChat?.id)
+      chatsState.find(c => c.id === chat?.chatId) :
+      chatsState.find(c => c.id === openedChat?.id)
     if (chatItem !== undefined) setOpenedChat(chatItem)
   }
 
+  const handleNewEmailInput = (t: string) => {
+    // apply mask
+    setNewEmailChat(t)
+  }
 
+  const handleNewChat = async () => {
+    if (newEmailChat) {
+      const add = await Api.addChat(
+        userData.id,
+        userData.avatar as string,
+        userData.name,
+        newEmailChat
+      )
+
+      if (add.success) {
+        console.log("SUCCESS")
+      } else {
+        console.log("Erro")
+      }
+    }
+  }
 
   const getOtherChatsEls = (pickedId: string) => {
     let chats = chatsList.slice().filter(c => c.chatId !== pickedId)
 
     return (
       <>
-        {chats.map((chat: Chat, k) => {
+        {chats.map((chat: UserChatList, k) => {
           let key = chatsList.findIndex(c => c.chatId === chat.chatId)
           return (
             <ChatItem key={key}
@@ -110,62 +147,6 @@ const ChatPage = () => {
     )
   }
 
-  useEffect(() => { // 1
-    console.log("1")
-    const getChats = async () => {
-      let req = await Api.getUserChats(userData.id)
-      if (req.success) {
-        dispatch({
-          type: 'SET_CHATS',
-          payload: { chats: req.chats }
-        })
-      }
-    }
-    getChats()
-  }, [])
-
-  useEffect(() => {
-
-    if (openedChat) {
-      const chats = parseChatsToChatsList({ chats: chatsData, fromUserData: false })
-
-      // update last messages in userData
-      dispatch({
-        type: 'UPDATE_USER_CHAT',
-        payload: {
-          chats: chats,
-          chatId: openedChat.id
-        }
-      })
-    }
-  }, [chatsData])
-
-  useEffect(() => {
-    setChatsList(userData.chats)
-    if (openedChat) {
-      setPickedChat({ id: openedChat.id as string, key: userData.chats.findIndex(c => c.chatId === openedChat?.id) })
-    }
-  }, [userData.chats])
-
-  // useEffect(() => {
-  //   console.log("1")
-  //   if (openedChat) {
-  //     const updateUserChatInfo = async () => {
-  //       const chats = await Api.getUserInfo(userData.id) as UserData
-  //       dispatch({
-  //         type: 'UPDATE_USER_CHAT',
-  //         payload: {
-  //           chats: chats.chats,
-  //           chatId: openedChat?.id
-  //         }
-  //       })
-  //     }
-  //     updateUserChatInfo()
-  //     updateChatView()
-  //   }
-  // }, [chatsData])
-
-
 
   return (
     <S.Container>
@@ -179,6 +160,7 @@ const ChatPage = () => {
               <S.UserEmail>{userData.email ?? ''}</S.UserEmail>
             </S.UserInfo>
           </S.InfoArea>
+
           <ArrowDownIcon width={24} height={24} onClick={() => setUserOptionsOpened(!userOptionsOpened)} />
 
           <S.UserOptions className={userOptionsOpened ? 'active' : ''}>
@@ -192,6 +174,7 @@ const ChatPage = () => {
               <span>Sair</span>
             </Link>
           </S.UserOptions>
+
         </S.UserArea>
 
         <S.SearchArea>
@@ -219,28 +202,26 @@ const ChatPage = () => {
               />
             }
           </S.OpenedChatArea>
+          {chatsList.length > 0 && pickedChat == null &&
+            chatsList.map((chat: UserChatList, k) => (
+              <ChatItem key={k}
+                active={false}
+                photoUrl={chat.photoUrl}
+                chatName={chat.chatName}
+                chatLastMsg={chat.chatLastMsg}
+                onClick={() => handleChatPick(chat, k)}
+              />
+            ))
+          }
+          {chatsList.length > 0 && pickedChat !== null &&
+            <S.OthersChatsArea>
+              <h3>Outros chats</h3>
+              {getOtherChatsEls(pickedChat.id)}
+            </S.OthersChatsArea>
+          }
 
-          <S.OthersChatsArea>
-            {chatsList.length > 0 && pickedChat == null &&
-              chatsList.map((chat: Chat, k) => (
-                <ChatItem key={k}
-                  active={false}
-                  photoUrl={chat.photoUrl}
-                  chatName={chat.chatName}
-                  chatLastMsg={chat.chatLastMsg}
-                  onClick={() => handleChatPick(chat, k)}
-                />
-              ))
-            }
-            {chatsList.length > 0 && pickedChat !== null &&
-              <S.OthersChatsArea>
-                <h3>Outros chats</h3>
-                {getOtherChatsEls(pickedChat.id)}
-              </S.OthersChatsArea>
-            }
-          </S.OthersChatsArea>
+
         </S.ChatsArea>
-        {/*
         <S.AddChatBtn className={addChatOpened ? 'opened' : ''}>
 
           <S.AddChatBtnInputArea>
@@ -273,9 +254,7 @@ const ChatPage = () => {
           </S.AddChatBtnBtnsArea>
 
         </S.AddChatBtn>
-        */}
       </S.Left>
-
       {openedChat &&
         <ChatArea chat={openedChat} />
       }

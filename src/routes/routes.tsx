@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router-dom"
-import PRoute from "./authRoute"
 import Login from "../pages/Login"
+import SignUp from "../pages/SignUp"
 import ChatPage from "../pages/Chat"
 import ConfigPage from "../pages/Config"
 import AuthRoute from "./authRoute"
@@ -17,13 +17,11 @@ const Router = () => {
           <ChatPage />
         </AuthRoute>
       } />
+      <Route path="/signup" element={
+        <SignUp />
+      } />
       <Route path="/login" element={
         <Login />
-      } />
-      <Route path="/signup" element={
-        <AuthRoute>
-          <Login signup />
-        </AuthRoute>
       } />
       <Route path="/config" element={
         <AuthRoute>

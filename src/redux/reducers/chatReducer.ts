@@ -43,7 +43,6 @@ const chatReducer = (state: ChatStateType = initialState, action: ActionsType) =
         ]
       }
 
-      return state
       break;
     default:
       return state

@@ -10,7 +10,7 @@ export type ChatInfo = {
   users: string[];
   messages: Message[];
   id?: string;
-  ref?: DocumentReference;
+  ref?: DocumentReference | string;
 }
 
 export type ActionsType = {

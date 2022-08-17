@@ -3,6 +3,7 @@ import * as S from './styled'
 import { ReactComponent as ChatOptionsIcon } from '../../assets/icons/chat-options.svg'
 
 type Props = {
+  active: boolean;
   photoUrl: string;
   chatName: string;
   chatLastMsg: string;
@@ -10,11 +11,11 @@ type Props = {
 }
 
 
-const ChatItem = ({ photoUrl, chatName, chatLastMsg, onClick }: Props) => {
+const ChatItem = ({ active, photoUrl, chatName, chatLastMsg, onClick }: Props) => {
 
   return (
-    <S.Box onClick={onClick}>
-      <S.ChatPhoto bgImg={'assets/images/users/' + photoUrl} /> {/* change to storage url */}
+    <S.Box onClick={onClick} className={active ? 'active' : ''}>
+      <S.ChatPhoto bgImg={`assets/images/users/${photoUrl}`} /> {/* change to storage url */}
       <S.ChatInfo>
         <S.ChatName>{chatName}</S.ChatName>
         <S.ChatLastMessage><p>{chatLastMsg}</p></S.ChatLastMessage>

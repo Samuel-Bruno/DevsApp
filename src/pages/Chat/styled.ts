@@ -14,7 +14,7 @@ export const Left = styled.div`
   position:relative;
 `
 
-export const UserArea = styled.div<{svgInvertion:boolean}>`
+export const UserArea = styled.div<{ svgInvertion: boolean }>`
   color:white;
   margin:15px;
   padding:0 15px 15px;
@@ -36,10 +36,13 @@ export const InfoArea = styled.div`
   align-items:center;
 `
 
-export const UserPhoto = styled.img`
+export const UserPhoto = styled.div<{ src: string }>`
   width:60px;
   height:60px;
   border-radius:50%;
+  background-image:url(${p => p.src});
+  background-size:cover;
+  background-position:center;
 `
 
 export const UserInfo = styled.div`
@@ -100,9 +103,24 @@ export const ChatsArea = styled.div`
   margin:30px 10px;
   height:calc(100vh - 177px);
   overflow-y:auto;
+  overflow-x:visible;
 
   color:white;
+  
+  svg#chatIndicator {
+    position:absolute;
+    z-index:10;
+    right:-20px;
+    margin-top:15px;
+  }
+
 `
+
+export const OpenedChatArea = styled.div`
+  margin-bottom:30px;
+`
+
+export const OthersChatsArea = styled.div``
 
 export const UserOptions = styled.div`
   width:215px;

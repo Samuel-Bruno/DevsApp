@@ -20,43 +20,47 @@ const ChatArea = ({ chat }: Props) => {
   const Api = useApi()
 
   const userData = useSelector((state: RootState) => state.user.data)
-  const { users, messages } = chat ?? { users: [], messages: [] }
+  const { messages } = chat ?? { messages: [] }
 
   const [msgInput, setMsgInput] = useState<string>('')
 
 
   useEffect(() => {
+    updateScroll()
+  }, [])
+
+  useEffect(() => {
+    updateScroll()
+  }, [chat])
+
+  const updateScroll = () => {
     let messagesArea = document.getElementById("messagesArea")
     if (messagesArea) {
       let totalScroll = messagesArea.scrollHeight ?? 0
       messagesArea.scrollTo(0, totalScroll)
     }
-  }, [])
+  }
 
   const handleMsgInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMsgInput(e.target.value)
   }
 
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-    let code = e.code
-
-    if (code === "Enter") {
-      if (chat && userData) {
-        if (msgInput !== "") sendMessage()
-      }
+    if (e.code === "Enter" && chat && userData) {
+      if (msgInput !== "") sendMessage()
     }
   }
 
   const sendMessage = async () => {
+    const body = msgInput
+    setMsgInput('')
     await Api.sendMessage({
       msgType: "text",
-      msgBody: msgInput,
-      chatId: chat.id as string,
-      chatUsers: chat.users,
+      msgBody: body,
+      chat: chat,
       userId: userData?.id,
     })
-
-    setMsgInput('')
+    updateScroll()
   }
 
 

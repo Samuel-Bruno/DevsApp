@@ -10,10 +10,15 @@ export type LoginRes = {
 }
 
 export type Chat = {
-  lastMessageDate: Timestamp,
-  title: string,
-  lastMessage: string,
-  chatId: string
+  chatName: string;
+  chatLastMsg: string;
+  lastMessageDate: Timestamp;
+  photoUrl: string;
+  chatId: string;
+  // lastMessageDate: Timestamp,
+  // title: string,
+  // lastMessage: string,
+  // chatId: string
 }
 
 export type UserData = {

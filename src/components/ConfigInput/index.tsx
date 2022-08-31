@@ -8,11 +8,14 @@ type Props = {
   error?: {
     status: boolean;
     message: string;
-  } | null
+  } | null;
+  value: string;
+  onChange: (t: string) => void;
+  disabled?: boolean
 }
 
 
-const ConfigInput = ({ type, title, placeholder, error }: Props) => {
+const ConfigInput = ({ type, title, placeholder, error, value, onChange, disabled }: Props) => {
 
 
   return (
@@ -22,6 +25,10 @@ const ConfigInput = ({ type, title, placeholder, error }: Props) => {
         placeholder={placeholder}
         errorAlert={error?.status ?? false}
         type={type}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        disabled={disabled ?? false}
+        disabledStyle={disabled ?? false}
       />
       {error?.status === true &&
         <span className='errorMessage'>{error.message}</span>

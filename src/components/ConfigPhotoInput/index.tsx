@@ -1,22 +1,30 @@
-import React, { useState } from 'react'
+import React from 'react'
 import * as S from './styled'
 
 type Props = {
   title: string;
   img: string;
+  choosedPhotoFile: File | null;
+  setChoosedPhotoFile: (f: File) => void
+  choosedPhotoUrl: string | null;
+  setChoosedPhotoUrl: (t: string) => void;
 }
 
 
-const ConfigPhotoInput = ({ title, img }: Props) => {
-
-  const [choosedPhotoFile, setChoosedPhotoFile] = useState<File|null>(null)
-  const [choosedPhotoUrl, setChoosedPhotoUrl] = useState<string|null>(null)
+const ConfigPhotoInput = ({
+  title,
+  img,
+  choosedPhotoFile,
+  setChoosedPhotoFile,
+  choosedPhotoUrl,
+  setChoosedPhotoUrl,
+}: Props) => {
 
   const pickPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const el = e.target
-    if(el.files !== null) {
+    if (el.files !== null) {
       const file = el.files[0]
-      if(file) {
+      if (file) {
         setChoosedPhotoFile(file)
         const reader = new FileReader()
 

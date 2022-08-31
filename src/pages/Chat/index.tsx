@@ -23,7 +23,6 @@ import { UserData } from '../../types/api/loginRes'
 
 
 const ChatPage = () => {
-  console.log("Rendered")
 
   const Api = useRef(useApi()).current
   const dispatch = useRef(useDispatch()).current
@@ -31,47 +30,68 @@ const ChatPage = () => {
   const userData = useSelector((state: RootState) => state.user.data)
   const chatsData = useSelector((state: RootState) => state.chat.chats)
 
+  const [inMobile, setInMobile] = useState(false)
+
   const [userOptionsOpened, setUserOptionsOpened] = useState(false)
   const [chatsList, setChatsList] = useState<Chat[]>([])
   const [pickedChat, setPickedChat] = useState<null | { id: string, key: number }>(null)
   const [openedChat, setOpenedChat] = useState<null | ChatInfo>(null)
+  const [chatFilter, setChatFilter] = useState('')
+  const [addChatOpened, setAddChatOpened] = useState(false)
+  const [newEmailChat, setNewEmailChat] = useState('')
+
+  const [leftToggler, setLeftToggler] = useState(true)
+
+
+
+  const handleNewEmailInput = (t: string) => {
+    setNewEmailChat(t)
+  }
+
+  const handleNewChat = async () => {
+    if (newEmailChat) {
+      const add = await Api.addChat(
+        userData.id,
+        userData.avatar as string,
+        userData.name,
+        newEmailChat
+      )
+
+      if (add.success) {
+        dispatch({
+          type: 'ADD_USER_CHAT',
+          payload: { chats: add.userChatsList }
+        })
+        // await Api.getUserChats(userData.id)
+        dispatch({
+          type: 'SET_CHATS',
+          payload: { chats: (await Api.getUserChats(userData.id)).chats }
+        })
+        setNewEmailChat('')
+      } else {
+        alert(add.error?.message)
+      }
+    }
+  }
 
   const handleChatPick = (chat: Chat, k: number) => {
     setPickedChat({ id: chat.chatId as string, key: k })
     updateChatView(chat)
+    if (inMobile) setLeftToggler(false)
   }
 
-  const parseChatsToChatsList = ({ chats, fromUserData }:
-    { chats: ChatInfo[], fromUserData: false } |
-    { chats: Chat[], fromUserData: true }
-  ) => {
-
+  const parseChatsToChatsList = (chats: ChatInfo[]) => {
     let list: any[] = []
 
-    if (fromUserData === false) {
+    if (chats && chats.length > 0) {
       chats.forEach((chat) => {
-        // const chatName = await Api.getUserName(chat.users.filter(u => u !== userData.id)[0])
-        // const chatPhoto = await Api.getChatPhoto(userData.id, chat.id as string)
-        const lastMsg = chat.messages[chat.messages.length - 1]
+        const lastMsg: Message = chat.messages[chat.messages.length - 1]
 
         list.push({
           chatId: chat.id as string,
           chatLastMsg: lastMsg.body,
-          // chatName: chatName,
+          chatLastMsgType: lastMsg.type,
           lastMessageDate: lastMsg.date,
-          // photoUrl: chatPhoto,
-        })
-      })
-    } else {
-      chats.forEach((c) => {
-        // const chatPhoto = await Api.getChatPhoto(userData.id, c.chatId as string)
-
-        list.push({
-          chatId: c.chatId,
-          chatLastMsg: c.chatLastMsg,
-          // chatName: c.chatName,
-          lastMessageDate: c.lastMessageDate,
-          // photoUrl: chatPhoto,
         })
       })
     }
@@ -86,10 +106,12 @@ const ChatPage = () => {
     if (chatItem !== undefined) setOpenedChat(chatItem)
   }
 
+  const getAllChats = (filter?: string) => {
+    let chats = chatsList.slice()
 
-
-  const getOtherChatsEls = (pickedId: string) => {
-    let chats = chatsList.slice().filter(c => c.chatId !== pickedId)
+    if (filter) {
+      chats = chats.filter(c => c.chatName.includes(filter))
+    }
 
     return (
       <>
@@ -101,8 +123,9 @@ const ChatPage = () => {
               photoUrl={chat.photoUrl}
               chatName={chat.chatName}
               chatLastMsg={chat.chatLastMsg}
-              onClick={() => handleChatPick(chat, key)
-              }
+              chatLastMsgType={chat.chatLastMsgType}
+              onClick={() => handleChatPick(chat, key)}
+              delChat={() => handleDelChat(chat)}
             />
           )
         })}
@@ -110,174 +133,352 @@ const ChatPage = () => {
     )
   }
 
-  useEffect(() => { // 1
-    console.log("1")
+  const handleDelChat = async (chat: Chat) => {
+    if (chat.chatId === openedChat?.id) setOpenedChat(null)
+    if (chat.chatId === pickedChat?.id) setPickedChat(null)
+
+    dispatch({
+      type: 'DELETE_USER_CHAT',
+      payload: {
+        chatId: chat.chatId
+      }
+    })
+
+    await Api.delChat(chat.chatId, userData.id)
+  }
+
+  const getOtherChatsEls = (pickedId: string, filter?: string) => {
+    let chats = chatsList.slice().filter(c => c.chatId !== pickedId)
+
+    if (filter) {
+      chats = chats.filter(c => c.chatName.includes(filter))
+    }
+
+    return (
+      <>
+        {chats.map((chat: Chat, k) => {
+          let key = chatsList.findIndex(c => c.chatId === chat.chatId)
+          return (
+            <ChatItem key={key}
+              active={false}
+              photoUrl={chat.photoUrl}
+              chatName={chat.chatName}
+              chatLastMsg={chat.chatLastMsg}
+              chatLastMsgType={chat.chatLastMsgType}
+              onClick={() => handleChatPick(chat, key)}
+              delChat={() => handleDelChat(chat)}
+            />
+          )
+        })}
+      </>
+    )
+  }
+
+
+  useEffect(() => {
     const getChats = async () => {
       let req = await Api.getUserChats(userData.id)
-      if (req.success) {
-        dispatch({
-          type: 'SET_CHATS',
-          payload: { chats: req.chats }
-        })
-      }
+      if (req.success) dispatch({ type: 'SET_CHATS', payload: { chats: req.chats } })
     }
     getChats()
+
+    window.addEventListener('resize', () => {
+      let docSize = window.document.defaultView?.innerWidth
+      if (window.screen.width <= 840 || (docSize && docSize <= 840)) {
+        if (inMobile === false) setInMobile(true)
+      } else if (window.screen.width >= 840 || (docSize && docSize >= 840)) {
+        setInMobile(false)
+      }
+    })
+    if (
+      window.document.defaultView?.innerWidth &&
+      window.document.defaultView?.innerWidth <= 840
+    ) {
+      setInMobile(true)
+    }
   }, [])
 
   useEffect(() => {
 
-    if (openedChat) {
-      const chats = parseChatsToChatsList({ chats: chatsData, fromUserData: false })
+    const chats = parseChatsToChatsList(chatsData)
 
-      // update last messages in userData
-      dispatch({
-        type: 'UPDATE_USER_CHAT',
-        payload: {
-          chats: chats,
-          chatId: openedChat.id
-        }
-      })
+    if (openedChat) {
+      if (chatsData.length > 0) {
+        dispatch({
+          type: 'UPDATE_USER_CHAT',
+          payload: {
+            chats: chats,
+            chatId: openedChat?.id
+          }
+        })
+      }
+    // } else {
+    //   dispatch({
+    //     type: 'UPDATE_USER_CHATS_LIST',
+    //     payload: {
+    //       chats: chats
+    //     }
+    //   })
     }
+
   }, [chatsData])
 
   useEffect(() => {
+
     setChatsList(userData.chats)
     if (openedChat) {
       setPickedChat({ id: openedChat.id as string, key: userData.chats.findIndex(c => c.chatId === openedChat?.id) })
+      updateChatView()
     }
-  }, [userData.chats])
 
-  // useEffect(() => {
-  //   console.log("1")
-  //   if (openedChat) {
-  //     const updateUserChatInfo = async () => {
-  //       const chats = await Api.getUserInfo(userData.id) as UserData
-  //       dispatch({
-  //         type: 'UPDATE_USER_CHAT',
-  //         payload: {
-  //           chats: chats.chats,
-  //           chatId: openedChat?.id
-  //         }
-  //       })
-  //     }
-  //     updateUserChatInfo()
-  //     updateChatView()
-  //   }
-  // }, [chatsData])
+  }, [userData.chats])
 
 
 
   return (
-    <S.Container>
-      <S.Left>
-        <S.UserArea svgInvertion={userOptionsOpened}>
+    <S.Container className={`${!leftToggler ? 'mobileClosed' : ''}`}>
+      {inMobile &&
+        <S.BgLeft>
+          <S.Left>
+            <S.UserArea svgInvertion={userOptionsOpened}>
 
-          <S.InfoArea>
-            <S.UserPhoto src={`../../assets/images/users/${userData.avatar}`} />
-            <S.UserInfo>
-              <S.UserName>{userData.name ?? ''}</S.UserName>
-              <S.UserEmail>{userData.email ?? ''}</S.UserEmail>
-            </S.UserInfo>
-          </S.InfoArea>
-          <ArrowDownIcon width={24} height={24} onClick={() => setUserOptionsOpened(!userOptionsOpened)} />
+              <S.InfoArea>
+                <S.UserPhoto src={`${userData.avatar}`} />
+                <S.UserInfo>
+                  <S.UserName>{userData.name ?? ''}</S.UserName>
+                  <S.UserEmail>{userData.email ?? ''}</S.UserEmail>
+                </S.UserInfo>
+              </S.InfoArea>
+              <ArrowDownIcon width={24} height={24} onClick={() => setUserOptionsOpened(!userOptionsOpened)} />
 
-          <S.UserOptions className={userOptionsOpened ? 'active' : ''}>
-            <S.UserOptionsOption>
-              <SettingsIcon width={24} height={24} />
-              <span>Configurações</span>
-            </S.UserOptionsOption>
+              <S.UserOptions className={userOptionsOpened ? 'active' : ''}>
 
-            <Link to={'/logout'}>
-              <LogoutIcon width={24} height={24} />
-              <span>Sair</span>
-            </Link>
-          </S.UserOptions>
-        </S.UserArea>
+                <Link to={'/config'}>
+                  <SettingsIcon width={24} height={24} />
+                  <span>Configurações</span>
+                </Link>
 
-        <S.SearchArea>
-          <S.SearchInput
-            placeholder='Pesquisar...'
-          />
-          <SearchIcon width={24} height={24} />
-        </S.SearchArea>
+                <Link to={'/logout'}>
+                  <LogoutIcon width={24} height={24} />
+                  <span>Sair</span>
+                </Link>
+              </S.UserOptions>
+            </S.UserArea>
 
-        <S.ChatsArea>
-          {chatsList.length > 0 && pickedChat !== null &&
-            <OpenedChatIndicator
-              width={40} height={40}
-              id="chatIndicator"
+            <S.SearchArea>
+              <S.SearchInput
+                placeholder='Pesquisar...'
+                value={chatFilter}
+                onChange={e => setChatFilter(e.target.value)}
+              />
+              <SearchIcon width={24} height={24} />
+            </S.SearchArea>
+
+            <S.ChatsArea>
+              {chatsList.length > 0 && pickedChat !== null &&
+                <OpenedChatIndicator
+                  width={40} height={40}
+                  id="chatIndicator"
+                  fillOpacity={inMobile ? 0 : 1}
+                />
+              }
+              <S.OpenedChatArea>
+                {chatsList.length > 0 && pickedChat !== null &&
+                  <ChatItem
+                    active={true}
+                    photoUrl={chatsList[pickedChat.key].photoUrl}
+                    chatName={chatsList[pickedChat.key].chatName}
+                    chatLastMsg={chatsList[pickedChat.key].chatLastMsg}
+                    chatLastMsgType={chatsList[pickedChat.key].chatLastMsgType}
+                    onClick={() => handleChatPick(chatsList[pickedChat.key], pickedChat.key)}
+                    delChat={() => handleDelChat(chatsList[pickedChat.key])}
+                  />
+                }
+              </S.OpenedChatArea>
+
+              <S.OthersChatsArea>
+                {chatsList.length > 0 &&
+                  (pickedChat == null) ?
+                  (chatFilter) ? getAllChats(chatFilter) : getAllChats() :
+                  (pickedChat !== null) && chatsList.length > 1 &&
+                  <S.OthersChatsArea>
+                    <h3>Outros chats</h3>
+                    {chatFilter === '' &&
+                      getOtherChatsEls(pickedChat.id)
+                    } {chatFilter !== '' &&
+                      getOtherChatsEls(pickedChat.id, chatFilter)
+                    }
+                  </S.OthersChatsArea>
+                }
+                {chatsList.length === 0 &&
+                  <>Você não tem nenhum chat em aberto</>
+                }
+              </S.OthersChatsArea>
+            </S.ChatsArea>
+
+            <S.AddChatBtn className={addChatOpened ? 'opened' : ''}>
+
+              <S.AddChatBtnInputArea>
+                <span>Email</span>
+                <S.AddChatBtnEmailInput
+                  placeholder='Digite o email do contato'
+                  value={newEmailChat}
+                  onChange={e => handleNewEmailInput(e.target.value)}
+                />
+              </S.AddChatBtnInputArea>
+
+              <S.AddChatBtnBtnsArea>
+
+                <S.CancelBtn
+                  className='addChatBtn'
+                  onClick={() => setAddChatOpened(!addChatOpened)}
+                >
+                  <AddIcon width={24} height={24} className='addChatIcon' />
+                  <span>Cancelar</span>
+                </S.CancelBtn>
+
+                <S.ConfirmBtn
+                  className='confirmAddChatBtn'
+                  onClick={handleNewChat}
+                >
+                  <ConfirmAddIcon width={24} height={24} />
+                  <span>Add</span>
+                </S.ConfirmBtn>
+
+              </S.AddChatBtnBtnsArea>
+
+            </S.AddChatBtn>
+
+            <S.AreaToggler className={leftToggler ? 'active' : ''} onClick={() => setLeftToggler(!leftToggler)}>
+              <span></span>
+              <span></span>
+              <span></span>
+            </S.AreaToggler>
+
+          </S.Left>
+        </S.BgLeft>
+      }
+      {!inMobile &&
+        <S.Left>
+          <S.UserArea svgInvertion={userOptionsOpened}>
+
+            <S.InfoArea>
+              <S.UserPhoto src={`${userData.avatar}`} />
+              <S.UserInfo>
+                <S.UserName>{userData.name ?? ''}</S.UserName>
+                <S.UserEmail>{userData.email ?? ''}</S.UserEmail>
+              </S.UserInfo>
+            </S.InfoArea>
+            <ArrowDownIcon width={24} height={24} onClick={() => setUserOptionsOpened(!userOptionsOpened)} />
+
+            <S.UserOptions className={userOptionsOpened ? 'active' : ''}>
+
+              <Link to={'/config'}>
+                <SettingsIcon width={24} height={24} />
+                <span>Configurações</span>
+              </Link>
+
+              <Link to={'/logout'}>
+                <LogoutIcon width={24} height={24} />
+                <span>Sair</span>
+              </Link>
+            </S.UserOptions>
+          </S.UserArea>
+
+          <S.SearchArea>
+            <S.SearchInput
+              placeholder='Pesquisar...'
+              value={chatFilter}
+              onChange={e => setChatFilter(e.target.value)}
             />
-          }
-          <S.OpenedChatArea>
+            <SearchIcon width={24} height={24} />
+          </S.SearchArea>
+
+          <S.ChatsArea>
             {chatsList.length > 0 && pickedChat !== null &&
-              <ChatItem
-                active={true}
-                photoUrl={chatsList[pickedChat.key].photoUrl}
-                chatName={chatsList[pickedChat.key].chatName}
-                chatLastMsg={chatsList[pickedChat.key].chatLastMsg}
-                onClick={() => handleChatPick(chatsList[pickedChat.key], pickedChat.key)}
+              <OpenedChatIndicator
+                width={40} height={40}
+                id="chatIndicator"
               />
             }
-          </S.OpenedChatArea>
-
-          <S.OthersChatsArea>
-            {chatsList.length > 0 && pickedChat == null &&
-              chatsList.map((chat: Chat, k) => (
-                <ChatItem key={k}
-                  active={false}
-                  photoUrl={chat.photoUrl}
-                  chatName={chat.chatName}
-                  chatLastMsg={chat.chatLastMsg}
-                  onClick={() => handleChatPick(chat, k)}
+            <S.OpenedChatArea>
+              {chatsList.length > 0 && pickedChat !== null &&
+                <ChatItem
+                  active={true}
+                  photoUrl={chatsList[pickedChat.key].photoUrl}
+                  chatName={chatsList[pickedChat.key].chatName}
+                  chatLastMsg={chatsList[pickedChat.key].chatLastMsg}
+                  chatLastMsgType={chatsList[pickedChat.key].chatLastMsgType}
+                  onClick={() => handleChatPick(chatsList[pickedChat.key], pickedChat.key)}
+                  delChat={() => handleDelChat(chatsList[pickedChat.key])}
                 />
-              ))
-            }
-            {chatsList.length > 0 && pickedChat !== null &&
-              <S.OthersChatsArea>
-                <h3>Outros chats</h3>
-                {getOtherChatsEls(pickedChat.id)}
-              </S.OthersChatsArea>
-            }
-          </S.OthersChatsArea>
-        </S.ChatsArea>
-        {/*
-        <S.AddChatBtn className={addChatOpened ? 'opened' : ''}>
+              }
+            </S.OpenedChatArea>
 
-          <S.AddChatBtnInputArea>
-            <span>Email</span>
-            <S.AddChatBtnEmailInput
-              placeholder='Digite o email do contato'
-              value={newEmailChat}
-              onChange={e => handleNewEmailInput(e.target.value)}
-            />
-          </S.AddChatBtnInputArea>
+            <S.OthersChatsArea>
+              {chatsList.length > 0 &&
+                (pickedChat == null) ?
+                (chatFilter) ? getAllChats(chatFilter) : getAllChats() :
+                (pickedChat !== null) && chatsList.length > 1 &&
+                <S.OthersChatsArea>
+                  <h3>Outros chats</h3>
+                  {chatFilter === '' &&
+                    getOtherChatsEls(pickedChat.id)
+                  } {chatFilter !== '' &&
+                    getOtherChatsEls(pickedChat.id, chatFilter)
+                  }
+                </S.OthersChatsArea>
+              }
+              {chatsList.length === 0 &&
+                <>Você não tem nenhum chat em aberto</>
+              }
+            </S.OthersChatsArea>
+          </S.ChatsArea>
 
-          <S.AddChatBtnBtnsArea>
+          <S.AddChatBtn className={addChatOpened ? 'opened' : ''}>
 
-            <S.CancelBtn
-              className='addChatBtn'
-              onClick={() => setAddChatOpened(!addChatOpened)}
-            >
-              <AddIcon width={24} height={24} className='addChatIcon' />
-              <span>Cancelar</span>
-            </S.CancelBtn>
+            <S.AddChatBtnInputArea>
+              <span>Email</span>
+              <S.AddChatBtnEmailInput
+                placeholder='Digite o email do contato'
+                value={newEmailChat}
+                onChange={e => handleNewEmailInput(e.target.value)}
+              />
+            </S.AddChatBtnInputArea>
 
-            <S.ConfirmBtn
-              className='confirmAddChatBtn'
-              onClick={handleNewChat}
-            >
-              <ConfirmAddIcon width={24} height={24} />
-              <span>Add</span>
-            </S.ConfirmBtn>
+            <S.AddChatBtnBtnsArea>
 
-          </S.AddChatBtnBtnsArea>
+              <S.CancelBtn
+                className='addChatBtn'
+                onClick={() => setAddChatOpened(!addChatOpened)}
+              >
+                <AddIcon width={24} height={24} className='addChatIcon' />
+                <span>Cancelar</span>
+              </S.CancelBtn>
 
-        </S.AddChatBtn>
-        */}
-      </S.Left>
+              <S.ConfirmBtn
+                className='confirmAddChatBtn'
+                onClick={handleNewChat}
+              >
+                <ConfirmAddIcon width={24} height={24} />
+                <span>Add</span>
+              </S.ConfirmBtn>
 
-      {openedChat &&
-        <ChatArea chat={openedChat} />
+            </S.AddChatBtnBtnsArea>
+
+          </S.AddChatBtn>
+
+          <S.AreaToggler className={leftToggler ? 'active' : ''} onClick={() => setLeftToggler(!leftToggler)}>
+            <span></span>
+            <span></span>
+            <span></span>
+          </S.AreaToggler>
+
+        </S.Left>
+      }
+
+      {openedChat && pickedChat &&
+        <ChatArea chat={openedChat} chatName={chatsList[pickedChat.key]?.chatName ?? ''} />
       }
     </S.Container>
   )

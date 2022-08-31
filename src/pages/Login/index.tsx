@@ -16,6 +16,8 @@ const Login = () => {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [errorShowing, setErrorShowing] = useState(false)
 
 
   useEffect(() => {
@@ -26,18 +28,19 @@ const Login = () => {
   }, [])
 
   const handleEmailInput = (t: string) => {
-    // apply mask
+    if(errorShowing) setErrorShowing(false)
     setEmail(t)
   }
 
   const handlePassInput = (t: string) => {
-    // apply mask
+    if(errorShowing) setErrorShowing(false)
     setPassword(t)
   }
 
   const handleSubmit = async () => {
 
     if (email && password) {
+      setLoading(true)
       const login = await Api.login(email, password)
 
       if (login.success) {
@@ -52,7 +55,8 @@ const Login = () => {
         Api.saveToken(login.user?.token as string)
         navigation('/')
       } else {
-        console.log(login.error)  // switch cases
+        setLoading(false)
+        setErrorShowing(true)
       }
     }
   }
@@ -70,6 +74,9 @@ const Login = () => {
       </S.Main>
       <S.Aside>
         <h3>Login</h3>
+        <S.ErrorArea style={{ opacity: errorShowing ? 1 : 0 }}>
+          <span>E-mail e/ou senha incorretos</span>
+        </S.ErrorArea>
         <S.Form onSubmit={e => e.preventDefault()}>
           <S.FormInput
             placeholder='Digite seu email'
@@ -82,7 +89,11 @@ const Login = () => {
             onChange={e => handlePassInput(e.target.value)}
             type={'password'}
           />
-          <S.FormBtn onClick={handleSubmit}>Entrar</S.FormBtn>
+          <S.FormBtn
+            onClick={handleSubmit}
+            disabled={loading}
+            style={{ opacity: !loading ? 1 : .5 }}
+          >Entrar</S.FormBtn>
           <Link
             to={'/signup'}
             id="link"

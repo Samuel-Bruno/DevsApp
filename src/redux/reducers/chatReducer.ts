@@ -1,4 +1,3 @@
-import produce from "immer";
 import { Message } from "../../types/chat/messages";
 import { ActionsType, ChatInfo, ChatStateType } from "../../types/reducers/chatsReducer";
 
@@ -10,13 +9,19 @@ const initialState: ChatStateType = {
 }
 
 const chatReducer = (state: ChatStateType = initialState, action: ActionsType) => {
-
+  let res: ChatStateType = state
 
   switch (action.type) {
     case "SET_CHATS":
-      return {
+      res = {
         ...state,
         chats: action.payload.chats
+      }
+      break;
+    case "DELETE_CHAT":
+      res = {
+        ...state,
+        chats: state.chats.filter(c => c.id !== action.payload.chatId)
       }
       break;
     case 'UPDATE_CHAT':
@@ -25,30 +30,32 @@ const chatReducer = (state: ChatStateType = initialState, action: ActionsType) =
       const stateChats = state.chats.slice()
 
       const changedChatId = action.payload.chatId
+      if (stateChats.findIndex(c => c.id === changedChatId) > -1) {
+        let changedChat: ChatInfo = {
+          users: chatUsers,
+          messages: chatMessages,
+          id: changedChatId,
+          ref: action.payload.chatRef
+        }
 
-      let changedChat: ChatInfo = {
-        users: chatUsers,
-        messages: chatMessages,
-        id: changedChatId,
-        ref: action.payload.chatRef
+        let othersChatsList = stateChats.filter(c => c.id !== changedChatId)
+
+        res = {
+          ...state,
+          chats: [
+            changedChat,
+            ...othersChatsList
+          ]
+        }
+
       }
-
-      let othersChatsList = stateChats.filter(c => c.id !== changedChatId)
-
-      return {
-        ...state,
-        chats: [
-          changedChat,
-          ...othersChatsList
-        ]
-      }
-
       break;
     default:
-      return state
+      res = state
       break;
   }
 
+  return res
 }
 
 export default chatReducer

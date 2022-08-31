@@ -12,13 +12,10 @@ export type LoginRes = {
 export type Chat = {
   chatName: string;
   chatLastMsg: string;
+  chatLastMsgType: string;
   lastMessageDate: Timestamp;
   photoUrl: string;
   chatId: string;
-  // lastMessageDate: Timestamp,
-  // title: string,
-  // lastMessage: string,
-  // chatId: string
 }
 
 export type UserData = {
@@ -29,4 +26,4 @@ export type UserData = {
   name: string;
   photoUrl: string | null;
   token: string;
-} /* | undefined */;
+};

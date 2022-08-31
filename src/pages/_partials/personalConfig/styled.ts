@@ -23,4 +23,9 @@ export const SaveBtn = styled.div`
   position:absolute;
   bottom:0;
   right:0;
+
+  @media (max-width:840px) {
+    position:relative;
+  }
+  
 `

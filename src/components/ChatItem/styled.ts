@@ -48,9 +48,9 @@ export const ChatInfo = styled.div`
 export const ChatName = styled.div`
   font-size:18px;
   font-weight:600;
-  `
-  
-  export const ChatLastMessage = styled.div`
+`
+
+export const ChatLastMessage = styled.div`
   font-size:14px;
   font-weight:300;
   width:100%;
@@ -60,18 +60,60 @@ export const ChatName = styled.div`
     white-space:nowrap;
     text-overflow:ellipsis;
     margin:0;
+
+    svg path {
+      fill:rgba(200,200,200,.8);
+    }
   }
 `
 
 export const OptionsArea = styled.div`
   justify-content:center;
-  align-items:center;
+  align-items:flex-start;
+  flex-direction:row-reverse;
   display:none;
   position:absolute;
+  padding:5px 2px;
   right:5px;
   top:5px;
-  padding:5px 2px;
-  transition:background-color .3s;
+  z-index:20;
+
+  svg {
+    transition:background-color .3s;
+  
+    &:hover {
+      background-color:rgba(57, 89, 110, .43);
+    }
+  }
+  
+`
+
+export const ChatOptionsList = styled.div`
+  display:none;
+  flex-direction:column;
+  margin-right:10px;
+  position:relative;
+
+  &.active {
+    display:flex;
+  }
+`
+
+export const ChatOption = styled.div`
+  position:absolute;
+  width:120px;
+  display:flex;
+  align-items:center;
+  padding:4px 2px;
+  cursor:pointer;
+  transition: background-color .3s;
+  box-shadow:0 5px 14px rgba(0, 0, 0, .5);
+  background-color:rgba(57, 89, 110, .43);
+  right:0;
+
+  span {
+    margin-left:10px;
+  }
 
   &:hover {
     background-color:rgba(57, 89, 110, .43);

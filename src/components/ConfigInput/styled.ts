@@ -22,7 +22,7 @@ export const Label = styled.span`
   font-weight:600;
 `
 
-export const Input = styled.input<{ errorAlert: boolean }>`
+export const Input = styled.input<{ errorAlert: boolean; disabledStyle: boolean }>`
   width:100%;
   max-width:300px;
   font-size:16px;
@@ -33,4 +33,5 @@ export const Input = styled.input<{ errorAlert: boolean }>`
   border:1px solid ${p => p.errorAlert ? 'red' : 'transparent'};
   border-radius:5px;
   padding:8px 10px 8px 9px;
+  opacity:${p => p.disabledStyle === true ? '.6' : '1'};
 `

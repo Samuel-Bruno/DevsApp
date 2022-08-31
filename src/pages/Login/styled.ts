@@ -25,6 +25,22 @@ export const Main = styled.div`
 
     font-size:18px;
   }
+
+  @media (max-width:840px) {
+    display:none;
+
+    p {
+      max-width:80%;
+      font-size:16px;
+    }
+  }
+
+  @media (max-width:1000px) {
+    p {
+      max-width:80%;
+      font-size:16px;
+    }
+  }
 `
 
 export const Aside = styled.aside`
@@ -41,6 +57,19 @@ export const Aside = styled.aside`
     font-weight:600;
     margin:0;
   }
+
+  @media (max-width:840px) {
+    flex:1;
+  }
+`
+
+export const ErrorArea = styled.div`
+  background-color:rgba(255,30,30,.5);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin:40px auto 0px;
+  padding:10px 20px;
 `
 
 export const Form = styled.form`
@@ -95,5 +124,16 @@ export const Footer = styled.footer`
 
   span {
     font-size:16px;
+  }
+
+  @media (max-width:840px) {
+    color:white;
+  }
+
+  @media (max-width:1000px) {
+    margin-left:5vw;
+    span {
+      font-size:15px;
+    }
   }
 `

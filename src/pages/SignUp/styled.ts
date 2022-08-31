@@ -4,6 +4,15 @@ import styled from 'styled-components'
 export const Container = styled.div`
   display:flex;
   height:100vh;
+  
+
+  @media (max-width:840px) {
+    flex-direction:column;
+
+    body > #root > & {
+      background-color:rgba(17, 27, 33, 1);
+    }
+  }
 `
 
 export const Main = styled.div`
@@ -25,6 +34,22 @@ export const Main = styled.div`
 
     font-size:18px;
   }
+
+  @media (max-width:840px) {
+    display:none;
+
+    p {
+      max-width:80%;
+      font-size:16px;
+    }
+  }
+
+  @media (max-width:1000px) {
+    p {
+      max-width:80%;
+      font-size:16px;
+    }
+  }
 `
 
 export const Aside = styled.aside`
@@ -40,6 +65,11 @@ export const Aside = styled.aside`
     font-size:36px;
     font-weight:600;
     margin:0;
+  }
+
+  @media (max-width:840px) {
+    flex:1;
+    width:100%;
   }
 `
 
@@ -91,9 +121,26 @@ export const Footer = styled.footer`
   position:absolute;
   bottom:0;
   left:0;
-  margin:0 0 15px 45px;
+  margin:30px 0 15px 45px;
 
   span {
     font-size:16px;
+  }
+
+  @media (max-width:1000px) {
+    margin-left:5vw;
+    
+    span {
+      font-size:15px;
+    }
+  }
+  
+  @media (max-width:840px) {
+    color:white;
+    position:relative;
+
+    margin:0;
+    padding:60px 0 15px 45px;
+    background-color:rgba(17, 27, 33, 1);
   }
 `

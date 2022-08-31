@@ -1,7 +1,7 @@
-import { Chat, UserData } from "../../types/api/loginRes";
-import { Message } from "../../types/chat/messages";
-import { ChatInfo } from "../../types/reducers/chatsReducer";
-import { ActionsType, UserStateType } from "../../types/reducers/userReducer";
+import { Timestamp } from "firebase/firestore"
+import { Chat, UserData } from "../../types/api/loginRes"
+import { ChatInfo } from "../../types/reducers/chatsReducer"
+import { ActionsType, UserStateType } from "../../types/reducers/userReducer"
 
 const initialState: UserStateType = {
   isLogged: false,
@@ -42,6 +42,24 @@ const userReducer = (state: UserStateType = initialState, action: ActionsType) =
         data: action.payload.userData as UserData
       }
       break
+    case 'UPDATE_USER_PHOTO':
+      res = {
+        ...state,
+        data: {
+          ...state.data,
+          avatar: action.payload.photoUrl as string
+        }
+      }
+      break
+    case 'ADD_USER_CHAT':
+      res = {
+        ...state,
+        data: {
+          ...state.data,
+          chats: action.payload.chats
+        }
+      }
+      break
     case 'UPDATE_USER_CHAT':
       const chats = action.payload.chats
       const chatId = action.payload.chatId
@@ -51,11 +69,11 @@ const userReducer = (state: UserStateType = initialState, action: ActionsType) =
       if (chat !== undefined) {
         const stateChats = state.data.chats
         const chatInState = stateChats.find((c: Chat) => c.chatId === chatId)
-        console.log(stateChats)
 
         let changedChat: Chat = {
           chatName: chatInState?.chatName as string,
           chatLastMsg: chat.chatLastMsg,
+          chatLastMsgType: chat.chatLastMsgType,
           lastMessageDate: chat.lastMessageDate,
           photoUrl: chatInState?.photoUrl as string,
           chatId: chatId
@@ -63,12 +81,7 @@ const userReducer = (state: UserStateType = initialState, action: ActionsType) =
 
         let othersChatsList = stateChats.filter(c => c.chatId !== chatId)
 
-        console.log([
-          changedChat,
-          ...othersChatsList
-        ])
-
-        return {
+        res = {
           ...state,
           data: {
             ...state.data,
@@ -79,9 +92,51 @@ const userReducer = (state: UserStateType = initialState, action: ActionsType) =
           },
         }
       } else {
-        alert("HEREEqweE")
+        res = state
       }
-      return state
+      break
+    case 'UPDATE_USER_CHATS_LIST':
+      const list = action.payload.chats as {
+        chatId: string,
+        chatLastMsg: string,
+        chatLastMsgType: string,
+        lastMessageDate: Timestamp
+      }[]
+
+      const stateList = state.data.chats
+      let finalList: Chat[] = []
+
+      list.map(item => {
+        let i = stateList.findIndex(c => c.chatId === item.chatId)
+        if (i > -1) {
+          let obj: Chat = {
+            chatName: stateList[0].chatName as string,
+            chatLastMsg: item.chatLastMsg,
+            chatLastMsgType: item.chatLastMsgType,
+            lastMessageDate: item.lastMessageDate,
+            photoUrl: stateList[0].photoUrl as string,
+            chatId: item.chatId
+          }
+          finalList.push(obj)
+        }
+      })
+
+      res = {
+        ...state,
+        data: {
+          ...state.data,
+          chats: finalList
+        }
+      }
+      break
+    case 'DELETE_USER_CHAT':
+      res = {
+        ...state,
+        data: {
+          ...state.data,
+          chats: state.data.chats.filter(c => c.chatId !== action.payload.chatId)
+        }
+      }
       break
     default:
       res = state

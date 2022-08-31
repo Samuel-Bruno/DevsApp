@@ -25,7 +25,13 @@ export type ActionsType = {
     chatId?: string;
     chatRef?: DocumentReference;
   };
+} | {
+  type: 'DELETE_CHAT';
+  payload: {
+    chatId?: string;
+    chatRef?: DocumentReference;
+  };
 }
 
 
-type actionsTypes = 'SET_CHATS' | 'UPDATE_CHAT_INFO'
+type actionsTypes = 'SET_CHATS' | 'DELETE_CHAT' |'UPDATE_CHAT_INFO'

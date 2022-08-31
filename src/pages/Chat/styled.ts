@@ -5,6 +5,46 @@ export const Container = styled.div`
   display:flex;
   background-color:rgba(21, 45, 58, 1);
   height:100vh;
+  width:100%;
+  transition:margin-left .3s, left .3s;
+
+
+  @media (max-width:840px) {
+    & {
+      width:auto;
+      margin-left:0;
+    }
+
+    &.mobileClosed {
+      margin-left:-370px;
+    }
+  }
+
+  body > #root > & {
+    overflow: hidden;
+  }
+`
+
+export const BgLeft = styled.div`
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0,0,0,.7);
+  position: absolute;
+  z-index: 10;
+  margin-left: 0;
+  
+  transition:background-color 1s;
+
+  div.mobileClosed > & {
+    position:relative;
+    max-width:370px;
+    background-color:rgba(0,0,0,0);
+  }
+  
+  div.mobileClosed > & > div > div > #chatIndicator > path {
+    fill:transparent;
+  }
+  
 `
 
 export const Left = styled.div`
@@ -12,6 +52,21 @@ export const Left = styled.div`
   max-width:370px;
   background-color:rgba(17, 27, 33, 1);
   position:relative;
+
+  @media (max-width:840px) {
+    & {
+      z-index:99;
+      width:370px;
+      height:100%;
+      position:absolute;
+      display:flex;
+      flex-direction:column;
+    }
+
+    div.mobileClosed > & {
+      position:relative;
+    }
+  }
 `
 
 export const UserArea = styled.div<{ svgInvertion: boolean }>`
@@ -101,7 +156,7 @@ export const ChatsArea = styled.div`
   width:100%;
   max-width:calc(100% - 20px);
   margin:30px 10px;
-  height:calc(100vh - 177px);
+  flex:1;
   overflow-y:auto;
   overflow-x:visible;
 
@@ -299,5 +354,43 @@ export const ConfirmBtn = styled.div`
 
   span {
     margin-left: 5px;
+  }
+`
+
+export const AreaToggler = styled.div`
+  display:none;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  position:absolute;
+  right:-40px;
+  top:10px;
+  gap:5px;
+  cursor:pointer;
+
+  span {
+    width:30px;
+    height:5px;
+    border-radius:3px;
+    background-color:rgba(222, 108, 43, 1);
+    
+    transition:transform .3s, opacity .3s;
+  }
+  
+  &.active span:nth-child(1) {
+    transform: rotate(45deg) translateY(8px) translateX(9px);
+  }
+
+  &.active span:nth-child(2) {
+    opacity:0;
+  }
+  
+  &.active span:nth-child(3) {
+    transform: rotate(-45deg) translateY(-6px) translateX(6px);
+  }
+
+
+  @media (max-width: 840px) {
+    display:flex;
   }
 `

@@ -12,11 +12,16 @@ type Props = {
 const ReceivedMessage = ({ msg, wDetail }: Props) => {
 
 
-  return (
-    <S.Container wDetail={wDetail}>
+  return (msg.type === 'text') ? (
+    <S.ContainerText wDetail={wDetail}>
       {wDetail && <RecBoxDetail width={10} height={14} className='detail' />}
       {msg.body}
-    </S.Container>
+    </S.ContainerText>
+  ) : (
+    <S.ContainerPhoto wDetail={wDetail}>
+      {wDetail && <RecBoxDetail width={10} height={14} className='detail' />}
+      <img src={msg.body} alt="" />
+    </S.ContainerPhoto>
   )
 
 }

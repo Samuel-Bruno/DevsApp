@@ -96,7 +96,6 @@ const useApi = () => {
       return res
     },
     login: async (email: string, password: string) => {
-
       let res: LoginRes = { success: true }
 
       await signInWithEmailAndPassword(Auth, email, password)
@@ -110,10 +109,14 @@ const useApi = () => {
             const userData = userDoc.data() as UserInFirestore
             const chatsList = userData.chats
 
-            res.user = getUserObj(cred, token, userData, chatsList)
+            res.user = await getUserObj(cred, token, userData, chatsList)
 
             onSnapshot(userRef,
-              async doc => userOnSnap(doc, token, dispatch),
+              async doc => {
+                if (doc.metadata.isEqual(userDoc.metadata) == false) {
+                  userOnSnap(doc, userDoc.metadata, token, dispatch)
+                }
+              },
               (error) => {
                 res = { success: false, error: { message: error.message, code: error.code } }
               }
@@ -305,7 +308,7 @@ const useApi = () => {
                 if (chatData.users.includes(userId)) {
                   dispatch({
                     type: 'UPDATE_CHAT',
-                    payload: { chatData: snapShot.data(), chatId: snapShot.id }
+                    payload: { chatData: chatData, chatId: snapShot.id }
                   })
                 }
               })
@@ -468,7 +471,7 @@ const useApi = () => {
       const imagesTypesAllowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp']
 
       if (case1) {
-        let upload: UploadResult
+        let upload: UploadResult | null = null
         let photoUrl = ''
 
         if (imagesTypesAllowed.includes(avatar.type)) {
@@ -495,23 +498,23 @@ const useApi = () => {
               const chatToChange = otherUserChats.findIndex((c) => c.chatId === chat.id)
 
               otherUserChats[chatToChange].chatName = name
-              otherUserChats[chatToChange].photoUrl = photoUrl
-
-              dispatch({
-                type: 'UPDATE_USER_PHOTO',
-                photoUrl: await getDownloadURL(upload.ref)
-              })
+              otherUserChats[chatToChange].photoUrl = upload?.ref.fullPath as string
 
               const updatedChats = otherUserChats
-              await updateDoc(uRef, {
-                chats: updatedChats
-              })
+              await updateDoc(uRef, { chats: updatedChats })
             }
           })
         }))
 
-        const pastPhotoRef = ref(storage, Auth.currentUser?.photoURL as string)
-        deleteObject(pastPhotoRef)
+        if (upload !== null) {
+          dispatch({
+            type: 'UPDATE_USER_PHOTO',
+            photoUrl: await getDownloadURL(ref(storage, upload.ref.fullPath))
+          })
+        }
+
+        // const pastPhotoRef = ref(storage, Auth.currentUser?.photoURL as string)
+        // deleteObject(pastPhotoRef)
       }
       if (case2) {
         await updateDoc(userRef, { name: name })
@@ -540,17 +543,16 @@ const useApi = () => {
         }))
       }
       if (case3) {
-        let upload: UploadResult
+        let upload: UploadResult | null = null
         let photoUrl = ''
 
         if (imagesTypesAllowed.includes(avatar.type)) {
           let hashName = ref(storage, `profilesPhotos/${createId()}`)
           upload = await uploadBytes(hashName, avatar)
-          photoUrl = upload.ref.name
+          photoUrl = await getDownloadURL(ref(storage, upload.ref.fullPath))
         }
 
-        await deleteObject(ref(storage, `profilesPhotos/${userProfileNameRef}`))
-        await updateDoc(userRef, { avatar: photoUrl })
+        await updateDoc(userRef, { avatar: upload?.ref.name })
 
         const q = query(chatsRef, where("users", "array-contains", userId))
         const chatsUserIn = await getDocsFromServer(q)
@@ -558,28 +560,31 @@ const useApi = () => {
         chatsUserIn.docs.forEach((chat => {
           const usersChattingWith: string[] = chat.data().users
             .filter((id: string) => id !== userId)
-            
+
           usersChattingWith.forEach(async otherUser => {
             const uRef = doc(usersRef, otherUser)
             const otherUserData = await getDocFromServer(uRef)
+
             if (otherUserData.exists()) {
               const otherUserChats: UserChatList[] = otherUserData.data().chats
               const chatToChange = otherUserChats.findIndex((c) => c.chatId === chat.id)
 
-              otherUserChats[chatToChange].photoUrl = photoUrl
-
-              dispatch({
-                type: 'UPDATE_USER_PHOTO',
-                photoUrl: upload.ref.name
-              })
+              otherUserChats[chatToChange].photoUrl = upload?.ref.fullPath as string
 
               const updatedChats = otherUserChats
-              await updateDoc(uRef, {
-                chats: updatedChats
-              })
+              await updateDoc(uRef, { chats: updatedChats })
             }
           })
         }))
+
+        if (upload !== null) {
+          dispatch({
+            type: 'UPDATE_USER_PHOTO',
+            payload: { photoUrl }
+          })
+        }
+
+        await deleteObject(ref(storage, `profilesPhotos/${userProfileNameRef}`))
       }
     },
 

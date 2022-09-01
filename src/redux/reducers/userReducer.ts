@@ -1,6 +1,5 @@
 import { Timestamp } from "firebase/firestore"
 import { Chat, UserData } from "../../types/api/loginRes"
-import { ChatInfo } from "../../types/reducers/chatsReducer"
 import { ActionsType, UserStateType } from "../../types/reducers/userReducer"
 
 const initialState: UserStateType = {
@@ -106,20 +105,24 @@ const userReducer = (state: UserStateType = initialState, action: ActionsType) =
       const stateList = state.data.chats
       let finalList: Chat[] = []
 
-      list.map(item => {
+      console.log("StateList", stateList)
+      list.forEach(item => {
+        console.log("item", item)
         let i = stateList.findIndex(c => c.chatId === item.chatId)
         if (i > -1) {
           let obj: Chat = {
-            chatName: stateList[0].chatName as string,
+            chatName: stateList[i].chatName as string,
             chatLastMsg: item.chatLastMsg,
             chatLastMsgType: item.chatLastMsgType,
             lastMessageDate: item.lastMessageDate,
-            photoUrl: stateList[0].photoUrl as string,
+            photoUrl: stateList[i].photoUrl as string,
             chatId: item.chatId
           }
           finalList.push(obj)
         }
       })
+
+      console.log("FinalList", finalList)
 
       res = {
         ...state,

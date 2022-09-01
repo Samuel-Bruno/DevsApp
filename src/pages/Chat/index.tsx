@@ -19,7 +19,6 @@ import useApi from '../../api/api'
 import { ChatInfo } from '../../types/reducers/chatsReducer'
 import { UserChatList as Chat } from '../../types/chat/UserChatList'
 import { Message } from '../../types/chat/messages'
-import { UserData } from '../../types/api/loginRes'
 
 
 const ChatPage = () => {
@@ -206,31 +205,24 @@ const ChatPage = () => {
       if (chatsData.length > 0) {
         dispatch({
           type: 'UPDATE_USER_CHAT',
-          payload: {
-            chats: chats,
-            chatId: openedChat?.id
-          }
+          payload: { chats: chats, chatId: openedChat?.id }
         })
       }
     // } else {
     //   dispatch({
     //     type: 'UPDATE_USER_CHATS_LIST',
-    //     payload: {
-    //       chats: chats
-    //     }
+    //     payload: { chats: chats }
     //   })
     }
 
   }, [chatsData])
 
   useEffect(() => {
-
     setChatsList(userData.chats)
     if (openedChat) {
       setPickedChat({ id: openedChat.id as string, key: userData.chats.findIndex(c => c.chatId === openedChat?.id) })
       updateChatView()
     }
-
   }, [userData.chats])
 
 

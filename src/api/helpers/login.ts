@@ -1,30 +1,49 @@
 import { UserCredential } from "firebase/auth"
-import { DocumentSnapshot } from "firebase/firestore"
+import { DocumentSnapshot, SnapshotMetadata } from "firebase/firestore"
 import { getDownloadURL, ref } from "firebase/storage"
 import { storage } from "../../fb"
-import { UserData } from "../../types/api/loginRes"
+import { Chat, UserData } from "../../types/api/loginRes"
 import UserInFirestore from "../../types/fb-firestore/user"
 
 
-export const getUserObj = (cred: UserCredential, token: string, userData: any, chatsList: any[]) => ({
-  avatar: userData.avatar,
-  chats: chatsList,
-  email: userData.email,
-  name: userData.name,
-  token: token,
-  id: cred.user.uid,
-  photoUrl: cred.user.photoURL
-})
+export const parseChatsListToGetPhotoUrl = async (chats: Chat[]) => {
+  let list: Chat[] = []
 
-export const userOnSnap = async (doc: DocumentSnapshot, token: string, dispatch: ({ type, payload }: { type: string, payload: any }) => void) => {
+  chats.forEach(async c => {
+    let url = await getDownloadURL(ref(storage, c.photoUrl))
+    list.push({ ...c, photoUrl: url })
+  })
+
+  return list
+}
+
+export const getUserObj = async (cred: UserCredential, token: string, userData: any, chatsList: any[]) => {
+  let profilePhotoUrl = await getDownloadURL(ref(storage, `profilesPhotos/${userData.avatar}`))
+  let parsedList = await parseChatsListToGetPhotoUrl(chatsList)
+
+  return ({
+    avatar: profilePhotoUrl,
+    chats: parsedList,
+    email: userData.email,
+    name: userData.name,
+    token: token,
+    id: cred.user.uid,
+    photoUrl: cred.user.photoURL
+  })
+}
+
+export const userOnSnap = async (doc: DocumentSnapshot, userDocMetadata: SnapshotMetadata, token: string, dispatch: ({ type, payload }: { type: string, payload: any }) => void) => {
   if (doc.exists()) {
-    const userData = doc.data() as UserInFirestore
 
-    let profilePhotoUrl = await getDownloadURL(ref(storage, `profilesPhotos/${userData.avatar}`))
+    const userData = doc.data() as UserInFirestore
+    console.log("userData in userSnap", userData)
+
+    let profilePhotoUrl = await getDownloadURL(ref(storage, `profilesPhotos/${doc.get('avatar')}`))
+    let parsedList = await parseChatsListToGetPhotoUrl(userData.chats)
 
     const userObj: UserData = {
       avatar: profilePhotoUrl,
-      chats: userData.chats,
+      chats: parsedList,
       email: userData.email,
       id: doc.id,
       name: userData.name,
@@ -32,10 +51,12 @@ export const userOnSnap = async (doc: DocumentSnapshot, token: string, dispatch:
       token
     }
 
-    dispatch({
-      type: 'UPDATE_USER_INFO',
-      payload: { userData: userObj }
-    })
+    if (!doc.metadata.isEqual(userDocMetadata)) {
+      dispatch({
+        type: 'UPDATE_USER_INFO',
+        payload: { userData: userObj }
+      })
+    }
 
   }
 }

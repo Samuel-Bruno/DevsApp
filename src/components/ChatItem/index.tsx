@@ -46,6 +46,9 @@ const ChatItem = ({ active, photoUrl, chatName, chatLastMsg, chatLastMsgType, on
       <S.ChatInfo>
         <S.ChatName>{chatName}</S.ChatName>
         <S.ChatLastMessage>
+          {chatLastMsgType === 'fm' &&
+            <p></p>
+          }
           {chatLastMsgType === 'text' &&
             <p>{chatLastMsg}</p>
           }

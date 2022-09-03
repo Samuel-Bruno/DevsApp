@@ -58,15 +58,12 @@ const ChatPage = () => {
       )
 
       if (add.success) {
-        dispatch({
-          type: 'ADD_USER_CHAT',
-          payload: { chats: add.userChatsList }
-        })
+        // dispatch({ type: 'ADD_USER_CHAT', payload: { chats: add.userChatsList } })
         // await Api.getUserChats(userData.id)
-        dispatch({
-          type: 'SET_CHATS',
-          payload: { chats: (await Api.getUserChats(userData.id)).chats }
-        })
+        // dispatch({
+        //   type: 'SET_CHATS',
+        //   payload: { chats: (await Api.getUserChats(userData.id)).chats }
+        // })
         setNewEmailChat('')
       } else {
         alert(add.error?.message)
@@ -80,6 +77,13 @@ const ChatPage = () => {
     if (inMobile) setLeftToggler(false)
   }
 
+  const updateChatView = (chat?: Chat) => {
+    let chatItem = (chat) ?
+      chatsData.find(c => c.id === chat?.chatId) :
+      chatsData.find(c => c.id === openedChat?.id)
+    if (chatItem !== undefined) setOpenedChat(chatItem)
+  }
+
   const parseChatsToChatsList = (chats: ChatInfo[]) => {
     let list: any[] = []
 
@@ -89,7 +93,7 @@ const ChatPage = () => {
 
         list.push({
           chatId: chat.id as string,
-          chatLastMsg: lastMsg.body,
+          chatLastMsg: lastMsg.body ?? '',
           chatLastMsgType: lastMsg.type,
           lastMessageDate: lastMsg.date,
         })
@@ -97,13 +101,6 @@ const ChatPage = () => {
     }
 
     return list
-  }
-
-  const updateChatView = (chat?: Chat) => {
-    let chatItem = (chat) ?
-      chatsData.find(c => c.id === chat?.chatId) :
-      chatsData.find(c => c.id === openedChat?.id)
-    if (chatItem !== undefined) setOpenedChat(chatItem)
   }
 
   const getAllChats = (filter?: string) => {
@@ -144,7 +141,7 @@ const ChatPage = () => {
       }
     })
 
-    await Api.delChat(chat.chatId, userData.id)
+    // await Api.delChat(chat.chatId, userData.id)
   }
 
   const getOtherChatsEls = (pickedId: string, filter?: string) => {
@@ -178,7 +175,22 @@ const ChatPage = () => {
   useEffect(() => {
     const getChats = async () => {
       let req = await Api.getUserChats(userData.id)
-      if (req.success) dispatch({ type: 'SET_CHATS', payload: { chats: req.chats } })
+      if (req.success) {
+        dispatch({ type: 'SET_CHATS', payload: { chats: req.chats } })
+        req.chatsDocs.forEach(async snapshot => {
+          console.log(snapshot)
+          
+          if (snapshot.type === 'added' && chatsData.length === 0) {
+            console.log('snapshot - added', snapshot)
+          }
+          if(snapshot.type === 'modified') {
+            dispatch({
+              type: 'UPDATE_CHAT',
+              payload: { chatData: snapshot.doc.data(), chatId: snapshot.doc.id }
+            })
+          }
+        })
+      }
     }
     getChats()
 
@@ -199,32 +211,30 @@ const ChatPage = () => {
   }, [])
 
   useEffect(() => {
-
-    const chats = parseChatsToChatsList(chatsData)
-
+    console.log("chatsData", chatsData)
     if (openedChat) {
       if (chatsData.length > 0) {
         dispatch({
           type: 'UPDATE_USER_CHAT',
           payload: {
-            chats: chats,
+            chats: parseChatsToChatsList(chatsData),
             chatId: openedChat?.id
           }
         })
       }
-    // } else {
-    //   dispatch({
-    //     type: 'UPDATE_USER_CHATS_LIST',
-    //     payload: {
-    //       chats: chats
-    //     }
-    //   })
+      // } else {
+      //   dispatch({
+      //     type: 'UPDATE_USER_CHATS_LIST',
+      //     payload: {
+      //       chats: parseChatsToChatsList(chatsData)
+      //     }
+      //   })
     }
 
   }, [chatsData])
 
   useEffect(() => {
-
+    console.log("userData.chats", userData.chats)
     setChatsList(userData.chats)
     if (openedChat) {
       setPickedChat({ id: openedChat.id as string, key: userData.chats.findIndex(c => c.chatId === openedChat?.id) })

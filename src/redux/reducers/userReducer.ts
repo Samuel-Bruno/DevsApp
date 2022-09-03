@@ -138,6 +138,9 @@ const userReducer = (state: UserStateType = initialState, action: ActionsType) =
         }
       }
       break
+    case 'CLEAN_USER_STATE':
+      res = (action.payload.clean) ? initialState : state
+      break
     default:
       res = state
       break

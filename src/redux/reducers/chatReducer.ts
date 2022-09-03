@@ -2,10 +2,7 @@ import { Message } from "../../types/chat/messages";
 import { ActionsType, ChatInfo, ChatStateType } from "../../types/reducers/chatsReducer";
 
 const initialState: ChatStateType = {
-  chats: [{
-    users: [],
-    messages: []
-  }]
+  chats: []
 }
 
 const chatReducer = (state: ChatStateType = initialState, action: ActionsType) => {
@@ -25,6 +22,7 @@ const chatReducer = (state: ChatStateType = initialState, action: ActionsType) =
       }
       break;
     case 'UPDATE_CHAT':
+      console.log('updating')
       const chatUsers = action.payload.chatData?.users as string[]
       const chatMessages = action.payload.chatData?.messages as Message[]
       const stateChats = state.chats.slice()
@@ -50,6 +48,9 @@ const chatReducer = (state: ChatStateType = initialState, action: ActionsType) =
 
       }
       break;
+    case 'CLEAN_CHAT_STATE':
+      res = (action.payload.clean) ? initialState : state
+      break
     default:
       res = state
       break;

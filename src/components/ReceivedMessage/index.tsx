@@ -17,11 +17,13 @@ const ReceivedMessage = ({ msg, wDetail }: Props) => {
       {wDetail && <RecBoxDetail width={10} height={14} className='detail' />}
       {msg.body}
     </S.ContainerText>
-  ) : (
+  ) : (msg.type === 'photo') ? (
     <S.ContainerPhoto wDetail={wDetail}>
       {wDetail && <RecBoxDetail width={10} height={14} className='detail' />}
       <img src={msg.body} alt="" />
     </S.ContainerPhoto>
+  ) : (
+    <></>
   )
 
 }

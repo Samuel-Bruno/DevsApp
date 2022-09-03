@@ -31,7 +31,12 @@ export type ActionsType = {
     chatId?: string;
     chatRef?: DocumentReference;
   };
+} | {
+  type: 'CLEAN_CHAT_STATE';
+  payload: {
+    clean: boolean;
+  };
 }
 
 
-type actionsTypes = 'SET_CHATS' | 'DELETE_CHAT' |'UPDATE_CHAT_INFO'
+type actionsTypes = 'SET_CHATS' | 'DELETE_CHAT' | 'UPDATE_CHAT_INFO' | 'CLEAN_CHAT_STATE'

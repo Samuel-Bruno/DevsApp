@@ -17,11 +17,13 @@ const SendedMessage = ({ msg, wDetail }: Props) => {
       {wDetail && <BoxDetail width={10} height={14} className='detail' />}
       {msg.body}
     </S.ContainerText>
-  ) : (
+  ) : (msg.type === 'photo') ? (
     <S.ContainerPhoto wDetail={wDetail}>
       {wDetail && <BoxDetail width={10} height={14} className='detail' />}
       <img src={msg.body} alt="" />
     </S.ContainerPhoto>
+  ) : (
+    <></>
   )
 
 }

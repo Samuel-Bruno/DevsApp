@@ -1,6 +1,5 @@
 import { Timestamp } from "firebase/firestore"
 import { Chat, UserData } from "../../types/api/loginRes"
-import { ChatInfo } from "../../types/reducers/chatsReducer"
 import { ActionsType, UserStateType } from "../../types/reducers/userReducer"
 
 const initialState: UserStateType = {

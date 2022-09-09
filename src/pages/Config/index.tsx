@@ -9,7 +9,7 @@ import { ReactComponent as SecurityIcon } from '../../assets/icons/security.svg'
 import SecurityConfig from '../_partials/securityConfig'
 import { useSelector } from 'react-redux'
 import { RootState } from '../../redux/store'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 
 const Config = () => {

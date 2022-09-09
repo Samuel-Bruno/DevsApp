@@ -1,4 +1,3 @@
-import { User } from "firebase/auth";
 import { DocumentReference } from "firebase/firestore";
 
 export type GetUserDataRes = {

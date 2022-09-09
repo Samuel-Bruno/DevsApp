@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useStore } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import useApi from '../../api/api';
@@ -9,8 +9,8 @@ import * as S from './styled'
 const SignUp = () => {
 
   const store = useStore()
-  const navigation = useNavigate()
-  const dispatch = useDispatch()
+  const navigation = useRef(useNavigate()).current
+  const dispatch = useRef(useDispatch()).current
 
   const Api = useApi()
 
@@ -25,16 +25,7 @@ const SignUp = () => {
     if (userState.isLogged) {
       navigation('/')
     }
-  }, [])
-
-  const handleNameInput = (t: string) => {
-    // apply mask
-    setName(t)
-  }
-  const handleEmailInput = (t: string) => {
-    // apply mask
-    setEmail(t)
-  }
+  }, [store, navigation, dispatch])
 
   const handlePassInput = (t: string, field: 'p1' | 'p2') => {
     // apply mask
@@ -65,7 +56,7 @@ const SignUp = () => {
         Api.saveToken(subscribe.user?.token as string)
         navigation('/')
       } else {
-        console.log("Erro no cadastro — ", subscribe.error)
+        alert("Erro no cadastro. Tente novamente mais tarde")
       }
     } else {
       alert("Preencha todos os campos")
@@ -89,12 +80,12 @@ const SignUp = () => {
           <S.FormInput
             placeholder='Digite seu nome'
             value={name}
-            onChange={e => handleNameInput(e.target.value)}
+            onChange={e => setName(e.target.value)}
           />
           <S.FormInput
             placeholder='Digite seu email'
             value={email}
-            onChange={e => handleEmailInput(e.target.value)}
+            onChange={e => setEmail(e.target.value)}
           />
           <S.FormInput
             placeholder='Digite sua senha'

@@ -42,6 +42,15 @@ const userReducer = (state: UserStateType = initialState, action: ActionsType) =
         data: action.payload.userData as UserData
       }
       break
+    case 'UPDATE_USER_NAME':
+      res = {
+        ...state,
+        data: {
+          ...state.data,
+          name: action.payload.newName as string
+        }
+      }
+      break
     case 'UPDATE_USER_PHOTO':
       res = {
         ...state,
@@ -106,15 +115,15 @@ const userReducer = (state: UserStateType = initialState, action: ActionsType) =
       const stateList = state.data.chats
       let finalList: Chat[] = []
 
-      list.map(item => {
+      list.forEach(item => {
         let i = stateList.findIndex(c => c.chatId === item.chatId)
         if (i > -1) {
           let obj: Chat = {
-            chatName: stateList[0].chatName as string,
+            chatName: stateList[i].chatName as string,
             chatLastMsg: item.chatLastMsg,
             chatLastMsgType: item.chatLastMsgType,
             lastMessageDate: item.lastMessageDate,
-            photoUrl: stateList[0].photoUrl as string,
+            photoUrl: stateList[i].photoUrl as string,
             chatId: item.chatId
           }
           finalList.push(obj)

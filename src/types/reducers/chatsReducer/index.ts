@@ -19,6 +19,11 @@ export type ActionsType = {
     chats: ChatInfo[]
   };
 } | {
+  type: 'ADD_CHAT';
+  payload: {
+    chat: ChatInfo;
+  };
+} | {
   type: 'UPDATE_CHAT';
   payload: {
     chatData?: ChatData;

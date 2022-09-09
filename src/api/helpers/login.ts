@@ -17,7 +17,6 @@ export const parseChatsList = async (chats: Chat[]) => {
 }
 
 export const getUserObj = async (cred: UserCredential, userData: UserInFirestore) => ({
-  // avatar: userData.avatar,
   avatar: await getDownloadURL(ref(storage, `profilesPhotos/${userData.avatar}`)),
   chats: userData.chats,
   email: userData.email,

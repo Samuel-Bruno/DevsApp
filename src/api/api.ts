@@ -1,4 +1,4 @@
-import { addDoc, arrayUnion, collection, deleteDoc, doc, getDoc, getDocFromServer, getDocsFromServer, getFirestore, onSnapshot, query, setDoc, Timestamp, updateDoc, where, } from 'firebase/firestore'
+import { addDoc, arrayUnion, collection, deleteDoc, doc, getDocFromServer, getDocsFromServer, getFirestore, onSnapshot, query, setDoc, Timestamp, updateDoc, where, } from 'firebase/firestore'
 import {
   signInWithEmailAndPassword,
   getAuth,
@@ -7,25 +7,26 @@ import {
   updatePassword,
   UserCredential,
 } from 'firebase/auth'
-import { ref, getDownloadURL, uploadBytes, deleteObject, UploadResult } from 'firebase/storage'
+import { ref, getDownloadURL, uploadBytes } from 'firebase/storage'
 import { v4 as createId } from 'uuid'
 
 import app, { storage } from '../fb'
 
-import { parseChatsList, getUserObj, userOnSnap } from './helpers/login'
+import { getUserObj } from './helpers/login'
 
 import { Chat, LoginRes } from '../types/api/loginRes'
 import { useDispatch } from 'react-redux'
-import { ChatData, GetChatRes } from '../types/api/getChat'
+import { ChatData } from '../types/api/getChat'
 import { GetChatsRes } from '../types/api/getChatsRes'
 import { Message } from '../types/chat/messages'
-import { ChatInfo } from '../types/reducers/chatsReducer'
 import { SendMessageProps } from '../types/api/sendMessage'
 import { SignUpProps, SignUpRes } from '../types/api/signUp'
-import { AddChatRes, OtherUser } from '../types/api/addChat'
-import { UserChatList } from '../types/chat/UserChatList'
+import { AddChatRes } from '../types/api/addChat'
 import { Photo } from '../types/api/photo'
 import UserInFirestore from '../types/fb-firestore/user'
+
+import { case1, case2, case3 } from './helpers/updateUser'
+import { GetUserInfoRes } from '../types/api/getUserInfo'
 
 
 const db = getFirestore(app)
@@ -84,7 +85,6 @@ const useApi = () => {
           const userDoc = await getDocFromServer(doc(usersRef, cred.user.uid))
           if (userDoc.exists()) {
             res.user = await getUserObj(cred, userDoc.data() as UserInFirestore)
-            // onSnapShot
           } else {
             res = {
               success: false,
@@ -102,7 +102,6 @@ const useApi = () => {
     addChat: async (userId: string, userAvatar: string, userName: string, emailTo: string) => {
       let res: AddChatRes = { success: true }
 
-      // 1. verify if exists a user w/ emailTo
       let userWithEmailTo = await getDocsFromServer(
         query(usersRef, where('email', '==', emailTo))
       )
@@ -110,17 +109,18 @@ const useApi = () => {
         const otherUser = userWithEmailTo.docs[0]
         let chatAlreadyExists = false
 
-        // 1.2. if exists verify if user already have a chat w emailTo
         const userDoc = await getDocFromServer(doc(usersRef, userId))
         if (userDoc.exists()) {
           const userData = userDoc.data() as UserInFirestore
           const userChats = await getDocsFromServer(
-            query(usersRef, where('users', 'array-contains', userId))
+            query(chatsRef, where('users', 'array-contains', userId))
           )
 
-          userData.chats.forEach(c => {
-            let chat = userChats.docs.find(ct => ct.get('users').includes(userWithEmailTo.docs[0].id))
-            if (chat !== undefined) chatAlreadyExists = true
+          userChats.docs.forEach(c => {
+            if (!chatAlreadyExists) {
+              let users = c.get('users') as string[]
+              if (users.includes(otherUser.id)) chatAlreadyExists = true
+            }
           })
 
           if (chatAlreadyExists) {
@@ -134,7 +134,6 @@ const useApi = () => {
               users: [userId, otherUser.id]
             })
 
-            // 2022-09-02 -> decided to use link
 
             let pUrl = await getDownloadURL(ref(storage, `profilesPhotos/${otherUser.get('avatar')}`))
             const newChatForUserObj: Chat = {
@@ -181,13 +180,12 @@ const useApi = () => {
       return res
     },
     getUserChats: async (userId: string) => {
-      let res: GetChatsRes = { success: false, chats: [], chatsDocs: [] }
+      let res: GetChatsRes = { success: true, chats: [] }
 
       const q = query(chatsRef, where("users", "array-contains", userId))
       const chatsDocs = await getDocsFromServer(q)
 
       if (!chatsDocs.empty) {
-        res.success = true
         chatsDocs.docs.forEach(c => {
           res.chats.push({
             id: c.id,
@@ -196,38 +194,52 @@ const useApi = () => {
             messages: c.get('messages')
           })
         })
-        // res.chatsDocs = chatsDocs.docChanges()
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        onSnapshot(q, (snapshot) => {
           snapshot.docChanges().forEach((change) => {
-            console.log(change.type)
-            if (change.type === "added") {
-              console.log("onSnapshot - added")
-            }
             if (change.type === "modified") {
               dispatch({
                 type: 'UPDATE_CHAT',
                 payload: { chatData: change.doc.data(), chatId: change.doc.id }
               })
             }
-            if (change.type === "removed") {
-              console.log("onSnapshot - removed")
-            }
           })
         })
-        // chatsDocs.docChanges()
-        //   .forEach(async snapshot => {
-        //     console.log(snapshot)
-        //     if (snapshot.type === 'added') {
-        //       dispatch({
-        //         type: 'UPDATE_CHAT',
-        //         payload: { chatData: snapshot.doc.data(), chatId: snapshot.doc.id }
-        //       })
-        //     }
-        //   })
       }
 
       return res
+    },
+    getUserInfo: async (userId: string, token: string) => {
+      let res: GetUserInfoRes = { success: false }
+      const uRef = doc(usersRef, userId)
+      const userDoc = (await getDocFromServer(uRef))
+      if (userDoc.exists()) {
+        res.success = true
+        const userData = userDoc.data() as UserInFirestore
+        res.data = {
+          avatar: await getDownloadURL(ref(storage, `profilesPhotos/${userData.avatar}`)),
+          chats: userData.chats,
+          email: userData.email,
+          id: uRef.id,
+          name: userData.name,
+          photoUrl: null,
+          token
+        }
+      }
+      return res
+    },
+    delChat: async (chatId: string, userId: string) => {
+      const uRef = doc(usersRef, userId)
+      const uDoc = await getDocFromServer(uRef)
+      const cDoc = await getDocFromServer(doc(chatsRef, chatId))
+      const otherUserDoc = await getDocFromServer((doc(
+        usersRef, cDoc.get('users').filter((u: string) => u !== userId)[0]
+      )))
+
+      updateDoc(uRef, { chats: uDoc.get('chats').filter((c: Chat) => c.chatId !== chatId) })
+      if ((otherUserDoc.get('chats') as Chat[]).findIndex(c => c.chatId === chatId) === -1) {
+        deleteDoc(doc(chatsRef, chatId))
+      }
     },
     sendMessage: async (props: SendMessageProps) => {
       let { msgType, msgBody, chat, userId } = props
@@ -276,131 +288,29 @@ const useApi = () => {
         return new Error('Tipo de arquivo não permitido')
       }
     },
-
     updateUser: async (userId: string, name?: string, avatar?: File) => {
-      const case1 = name && name !== '' && avatar !== undefined
-      const case2 = name && name !== '' && !avatar
-      const case3 = !name && avatar !== undefined
+      const c1 = !name && avatar !== undefined
+      const c2 = name && name !== '' && !avatar
+      const c3 = name && name !== '' && avatar !== undefined
 
       const userRef = doc(usersRef, userId)
       const userProfileNameRef = await (await getDocFromServer(userRef)).get('avatar')
 
-      const imagesTypesAllowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp']
-
-      if (case1) {
-        let upload: UploadResult
-        let photoUrl = ''
-
-        if (imagesTypesAllowed.includes(avatar.type)) {
-          let hashName = ref(storage, `profilesPhotos/${createId()}`)
-          upload = await uploadBytes(hashName, avatar)
-          photoUrl = upload.ref.name
-        }
-
-        await deleteObject(ref(storage, `profilesPhotos/${userProfileNameRef}`))
-        await updateDoc(userRef, { name: name, avatar: photoUrl })
-
-        const q = query(chatsRef, where("users", "array-contains", userId))
-        const chatsUserIn = await getDocsFromServer(q)
-
-        chatsUserIn.docs.forEach((chat => {
-          const usersChattingWith: string[] = chat.data().users
-            .filter((id: string) => id !== userId)
-
-          usersChattingWith.forEach(async otherUser => {
-            const uRef = doc(usersRef, otherUser)
-            const otherUserData = await getDocFromServer(uRef)
-            if (otherUserData.exists()) {
-              const otherUserChats: UserChatList[] = otherUserData.data().chats
-              const chatToChange = otherUserChats.findIndex((c) => c.chatId === chat.id)
-
-              otherUserChats[chatToChange].chatName = name
-              otherUserChats[chatToChange].photoUrl = photoUrl
-
-              dispatch({
-                type: 'UPDATE_USER_PHOTO',
-                photoUrl: await getDownloadURL(upload.ref)
-              })
-
-              const updatedChats = otherUserChats
-              await updateDoc(uRef, {
-                chats: updatedChats
-              })
-            }
-          })
-        }))
-
-        const pastPhotoRef = ref(storage, Auth.currentUser?.photoURL as string)
-        deleteObject(pastPhotoRef)
-      }
-      if (case2) {
-        await updateDoc(userRef, { name: name })
-        const q = query(chatsRef, where("users", "array-contains", userId))
-        const chatsUserIn = await getDocsFromServer(q)
-
-        chatsUserIn.docs.forEach((chat => {
-          const usersChattingWith: string[] = chat.data().users.filter(
-            (id: string) => id !== userId
-          )
-          usersChattingWith.forEach(async otherUser => {
-            const uRef = doc(usersRef, otherUser)
-            const otherUserData = await getDocFromServer(uRef)
-            if (otherUserData.exists()) {
-              const otherUserChats: UserChatList[] = otherUserData.data().chats
-              const chatToChange = otherUserChats.findIndex((c) => c.chatId === chat.id)
-
-              otherUserChats[chatToChange].chatName = name
-
-              const updatedChats = otherUserChats
-              await updateDoc(uRef, {
-                chats: updatedChats
-              })
-            }
-          })
-        }))
-      }
-      if (case3) {
-        let upload: UploadResult
-        let photoUrl = ''
-
-        if (imagesTypesAllowed.includes(avatar.type)) {
-          let hashName = ref(storage, `profilesPhotos/${createId()}`)
-          upload = await uploadBytes(hashName, avatar)
-          photoUrl = upload.ref.name
-        }
-
-        await deleteObject(ref(storage, `profilesPhotos/${userProfileNameRef}`))
-        await updateDoc(userRef, { avatar: photoUrl })
-
-        const q = query(chatsRef, where("users", "array-contains", userId))
-        const chatsUserIn = await getDocsFromServer(q)
-
-        chatsUserIn.docs.forEach((chat => {
-          const usersChattingWith: string[] = chat.data().users
-            .filter((id: string) => id !== userId)
-
-          usersChattingWith.forEach(async otherUser => {
-            const uRef = doc(usersRef, otherUser)
-            const otherUserData = await getDocFromServer(uRef)
-            if (otherUserData.exists()) {
-              const otherUserChats: UserChatList[] = otherUserData.data().chats
-              const chatToChange = otherUserChats.findIndex((c) => c.chatId === chat.id)
-
-              otherUserChats[chatToChange].photoUrl = photoUrl
-
-              dispatch({
-                type: 'UPDATE_USER_PHOTO',
-                photoUrl: upload.ref.name
-              })
-
-              const updatedChats = otherUserChats
-              await updateDoc(uRef, {
-                chats: updatedChats
-              })
-            }
-          })
-        }))
-      }
+      if (c1) case1({
+        userId, avatar,
+        oldPhotoRef: userProfileNameRef,
+        dispatch, userRef,
+        usersRef: usersRef, chatsRef: chatsRef
+      })
+      if (c2) case2({
+        userId, name, dispatch,
+        userRef, usersRef, chatsRef
+      })
+      if (c3) case3({
+        userId, name, avatar,
+        oldPhotoRef: userProfileNameRef,
+        dispatch, userRef, usersRef, chatsRef
+      })
     },
 
 

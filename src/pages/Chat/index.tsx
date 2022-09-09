@@ -19,7 +19,7 @@ import useApi from '../../api/api'
 import { ChatInfo } from '../../types/reducers/chatsReducer'
 import { UserChatList as Chat } from '../../types/chat/UserChatList'
 import { Message } from '../../types/chat/messages'
-import { UserData } from '../../types/api/loginRes'
+import { Timestamp } from 'firebase/firestore'
 
 
 const ChatPage = () => {
@@ -58,12 +58,8 @@ const ChatPage = () => {
       )
 
       if (add.success) {
-        // dispatch({ type: 'ADD_USER_CHAT', payload: { chats: add.userChatsList } })
-        // await Api.getUserChats(userData.id)
-        // dispatch({
-        //   type: 'SET_CHATS',
-        //   payload: { chats: (await Api.getUserChats(userData.id)).chats }
-        // })
+        dispatch({ type: 'ADD_USER_CHAT', payload: { chats: add.userChatsList } })
+        dispatch({ type: 'ADD_CHAT', payload: { chat: add.chatDoc } })
         setNewEmailChat('')
       } else {
         alert(add.error?.message)
@@ -89,14 +85,23 @@ const ChatPage = () => {
 
     if (chats && chats.length > 0) {
       chats.forEach((chat) => {
-        const lastMsg: Message = chat.messages[chat.messages.length - 1]
-
-        list.push({
+        let obj = {
           chatId: chat.id as string,
-          chatLastMsg: lastMsg.body ?? '',
-          chatLastMsgType: lastMsg.type,
-          lastMessageDate: lastMsg.date,
-        })
+          chatLastMsg: '',
+          chatLastMsgType: 'fm',
+          lastMessageDate: Timestamp.now(),
+        }
+        if (chat.messages.length > 0) {
+          const lastMsg: Message = chat.messages[chat.messages.length - 1]
+
+          obj = {
+            ...obj,
+            chatLastMsg: lastMsg.body ?? '',
+            chatLastMsgType: lastMsg.type,
+            lastMessageDate: lastMsg.date,
+          }
+        }
+        list.push(obj)
       })
     }
 
@@ -134,14 +139,9 @@ const ChatPage = () => {
     if (chat.chatId === openedChat?.id) setOpenedChat(null)
     if (chat.chatId === pickedChat?.id) setPickedChat(null)
 
-    dispatch({
-      type: 'DELETE_USER_CHAT',
-      payload: {
-        chatId: chat.chatId
-      }
-    })
+    dispatch({ type: 'DELETE_USER_CHAT', payload: { chatId: chat.chatId } })
 
-    // await Api.delChat(chat.chatId, userData.id)
+    await Api.delChat(chat.chatId, userData.id)
   }
 
   const getOtherChatsEls = (pickedId: string, filter?: string) => {
@@ -177,19 +177,6 @@ const ChatPage = () => {
       let req = await Api.getUserChats(userData.id)
       if (req.success) {
         dispatch({ type: 'SET_CHATS', payload: { chats: req.chats } })
-        req.chatsDocs.forEach(async snapshot => {
-          console.log(snapshot)
-          
-          if (snapshot.type === 'added' && chatsData.length === 0) {
-            console.log('snapshot - added', snapshot)
-          }
-          if(snapshot.type === 'modified') {
-            dispatch({
-              type: 'UPDATE_CHAT',
-              payload: { chatData: snapshot.doc.data(), chatId: snapshot.doc.id }
-            })
-          }
-        })
       }
     }
     getChats()
@@ -208,10 +195,9 @@ const ChatPage = () => {
     ) {
       setInMobile(true)
     }
-  }, [])
+  }, [userData.id, Api, dispatch, inMobile])
 
   useEffect(() => {
-    console.log("chatsData", chatsData)
     if (openedChat) {
       if (chatsData.length > 0) {
         dispatch({
@@ -222,26 +208,33 @@ const ChatPage = () => {
           }
         })
       }
-      // } else {
-      //   dispatch({
-      //     type: 'UPDATE_USER_CHATS_LIST',
-      //     payload: {
-      //       chats: parseChatsToChatsList(chatsData)
-      //     }
-      //   })
+    } else {
+      if (chatsData.length === userData.chats.length) {
+        dispatch({
+          type: 'UPDATE_USER_CHATS_LIST',
+          payload: {
+            chats: parseChatsToChatsList(chatsData)
+          }
+        })
+      }
     }
 
-  }, [chatsData])
+  }, [chatsData, dispatch, openedChat, userData.chats.length])
 
   useEffect(() => {
-    console.log("userData.chats", userData.chats)
     setChatsList(userData.chats)
     if (openedChat) {
       setPickedChat({ id: openedChat.id as string, key: userData.chats.findIndex(c => c.chatId === openedChat?.id) })
-      updateChatView()
+      const updateViewInChat = (chat?: Chat) => {
+        let chatItem = (chat) ?
+          chatsData.find(c => c.id === chat?.chatId) :
+          chatsData.find(c => c.id === openedChat?.id)
+        if (chatItem !== undefined) setOpenedChat(chatItem)
+      }
+      updateViewInChat()
     }
 
-  }, [userData.chats])
+  }, [userData.chats, openedChat])
 
 
 
@@ -341,7 +334,7 @@ const ChatPage = () => {
 
                 <S.CancelBtn
                   className='addChatBtn'
-                  onClick={() => setAddChatOpened(!addChatOpened)}
+                  onClick={() => { setAddChatOpened(!addChatOpened); setNewEmailChat('') }}
                 >
                   <AddIcon width={24} height={24} className='addChatIcon' />
                   <span>Cancelar</span>
@@ -460,7 +453,7 @@ const ChatPage = () => {
 
               <S.CancelBtn
                 className='addChatBtn'
-                onClick={() => setAddChatOpened(!addChatOpened)}
+                onClick={() => { setAddChatOpened(!addChatOpened); setNewEmailChat('') }}
               >
                 <AddIcon width={24} height={24} className='addChatIcon' />
                 <span>Cancelar</span>

@@ -9,20 +9,28 @@ const chatReducer = (state: ChatStateType = initialState, action: ActionsType) =
   let res: ChatStateType = state
 
   switch (action.type) {
-    case "SET_CHATS":
+    case 'SET_CHATS':
       res = {
         ...state,
         chats: action.payload.chats
       }
       break;
-    case "DELETE_CHAT":
+    case 'ADD_CHAT':
+      res = {
+        ...state,
+        chats: [
+          action.payload.chat,
+          ...state.chats
+        ]
+      }
+      break
+    case 'DELETE_CHAT':
       res = {
         ...state,
         chats: state.chats.filter(c => c.id !== action.payload.chatId)
       }
       break;
     case 'UPDATE_CHAT':
-      console.log('updating')
       const chatUsers = action.payload.chatData?.users as string[]
       const chatMessages = action.payload.chatData?.messages as Message[]
       const stateChats = state.chats.slice()

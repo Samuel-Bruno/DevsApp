@@ -1,7 +1,7 @@
 import { Timestamp } from "firebase/firestore";
 
 export type Message = {
-  body: string;  // file
+  body: string;
   date: Timestamp;
   from: string;
   to: string;

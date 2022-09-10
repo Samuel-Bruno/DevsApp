@@ -1,5 +1,5 @@
 import { UserCredential } from "firebase/auth"
-import { DocumentSnapshot } from "firebase/firestore"
+import { DocumentSnapshot, SnapshotMetadata } from "firebase/firestore"
 import { getDownloadURL, ref } from "firebase/storage"
 import { storage } from "../../fb"
 import { Chat, UserData } from "../../types/api/loginRes"
@@ -26,11 +26,7 @@ export const getUserObj = async (cred: UserCredential, userData: UserInFirestore
   photoUrl: cred.user.photoURL
 })
 
-export const userOnSnap = async (
-  doc: DocumentSnapshot,
-  token: string,
-  dispatch: ({ type, payload }: { type: string, payload: any }) => void
-) => {
+export const userOnSnap = async (doc: DocumentSnapshot, userDocMetadata: SnapshotMetadata, token: string, dispatch: ({ type, payload }: { type: string, payload: any }) => void) => {
   if (doc.exists()) {
     const userData = doc.data() as UserInFirestore
 
@@ -44,10 +40,12 @@ export const userOnSnap = async (
       token
     }
 
-    dispatch({
-      type: 'UPDATE_USER_INFO',
-      payload: { userData: userObj }
-    })
+    if (!doc.metadata.isEqual(userDocMetadata)) {
+      dispatch({
+        type: 'UPDATE_USER_INFO',
+        payload: { userData: userObj }
+      })
+    }
 
   }
 }

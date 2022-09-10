@@ -222,6 +222,7 @@ const ChatPage = () => {
   }, [chatsData, dispatch, openedChat, userData.chats.length])
 
   useEffect(() => {
+
     setChatsList(userData.chats)
     if (openedChat) {
       setPickedChat({ id: openedChat.id as string, key: userData.chats.findIndex(c => c.chatId === openedChat?.id) })

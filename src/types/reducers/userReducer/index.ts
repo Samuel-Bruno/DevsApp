@@ -8,8 +8,9 @@ export type UserStateType = {
 export type ActionsType = {
   type: string;
   payload: {
-    isLogged:boolean;
-    data?:{};
-    userData?:UserData;
+    isLogged: boolean;
+    data?: {};
+    userData?: UserData;
+    photoUrl?: string;
   } | any;
 }

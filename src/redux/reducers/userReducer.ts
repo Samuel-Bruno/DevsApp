@@ -129,6 +129,8 @@ const userReducer = (state: UserStateType = initialState, action: ActionsType) =
         }
       })
 
+      console.log("FinalList", finalList)
+
       res = {
         ...state,
         data: {

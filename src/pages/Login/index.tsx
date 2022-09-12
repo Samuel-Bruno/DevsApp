@@ -17,23 +17,21 @@ const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [errorShowing, setErrorShowing] = useState(false)
+  const [error, setError] = useState({ showing: false, msg: '' })
 
 
   useEffect(() => {
     let userState = getStateProperty(store, 'user')
-    if (userState.isLogged) {
-      navigation('/')
-    }
+    if (userState.isLogged) navigation('/')
   }, [])
 
   const handleEmailInput = (t: string) => {
-    if(errorShowing) setErrorShowing(false)
+    if (error.showing) setError({ showing: false, msg: '' })
     setEmail(t)
   }
 
   const handlePassInput = (t: string) => {
-    if(errorShowing) setErrorShowing(false)
+    if (error.showing) setError({ showing: false, msg: '' })
     setPassword(t)
   }
 
@@ -46,17 +44,28 @@ const Login = () => {
       if (login.success) {
         dispatch({
           type: 'SET_LOGGED',
-          payload: {
-            isLogged: true,
-            userData: login.user
-          }
+          payload: { isLogged: true, userData: login.user }
         })
 
         Api.saveToken(login.user?.token as string)
         navigation('/')
       } else {
         setLoading(false)
-        setErrorShowing(true)
+        let msg = ''
+        switch (login.error?.code) {
+          case 'auth/invalid-email':
+            msg = 'Digite um e-mail válido'
+            break
+          case 'auth/user-not-found':
+            msg = 'Usuário não encontrado'
+            break
+          case 'auth/wrong-password':
+            msg = 'Senha incorreta'
+            break
+          default:
+            break
+        }
+        setError({ showing: true, msg })
       }
     }
   }
@@ -74,8 +83,8 @@ const Login = () => {
       </S.Main>
       <S.Aside>
         <h3>Login</h3>
-        <S.ErrorArea style={{ opacity: errorShowing ? 1 : 0 }}>
-          <span>E-mail e/ou senha incorretos</span>
+        <S.ErrorArea style={{ opacity: error.showing ? 1 : 0 }}>
+          <span>{error.msg}</span>
         </S.ErrorArea>
         <S.Form onSubmit={e => e.preventDefault()}>
           <S.FormInput
@@ -94,10 +103,7 @@ const Login = () => {
             disabled={loading}
             style={{ opacity: !loading ? 1 : .5 }}
           >Entrar</S.FormBtn>
-          <Link
-            to={'/signup'}
-            id="link"
-          >Não tem uma conta?</Link>
+          <Link to={'/signup'} id="link" >Não tem uma conta?</Link>
         </S.Form>
       </S.Aside>
       <S.Footer>

@@ -2,15 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import * as S from './styled'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../../redux/store'
-import { Link } from 'react-router-dom'
 
-import { ReactComponent as ArrowDownIcon } from '../../assets/icons/arrow-down.svg'
-import { ReactComponent as SettingsIcon } from '../../assets/icons/settings.svg'
-import { ReactComponent as LogoutIcon } from '../../assets/icons/logout.svg'
-import { ReactComponent as SearchIcon } from '../../assets/icons/search.svg'
-import { ReactComponent as OpenedChatIndicator } from '../../assets/icons/opened-chat-indicator.svg'
-import { ReactComponent as AddIcon } from '../../assets/icons/add.svg'
-import { ReactComponent as ConfirmAddIcon } from '../../assets/icons/confirm.svg'
 import ChatItem from '../../components/ChatItem'
 import ChatArea from '../../components/ChatArea'
 
@@ -20,6 +12,7 @@ import { ChatInfo } from '../../types/reducers/chatsReducer'
 import { UserChatList as Chat } from '../../types/chat/UserChatList'
 import { Message } from '../../types/chat/messages'
 import { Timestamp } from 'firebase/firestore'
+import Left from '../../components/Left'
 
 
 const ChatPage = () => {
@@ -39,12 +32,13 @@ const ChatPage = () => {
   const [chatFilter, setChatFilter] = useState('')
   const [addChatOpened, setAddChatOpened] = useState(false)
   const [newEmailChat, setNewEmailChat] = useState('')
+  const [emailError, setEmailError] = useState({ showing: false, msg: '' })
 
   const [leftToggler, setLeftToggler] = useState(true)
 
 
-
   const handleNewEmailInput = (t: string) => {
+    setEmailError({ showing: false, msg: '' })
     setNewEmailChat(t)
   }
 
@@ -62,7 +56,7 @@ const ChatPage = () => {
         dispatch({ type: 'ADD_CHAT', payload: { chat: add.chatDoc } })
         setNewEmailChat('')
       } else {
-        alert(add.error?.message)
+        setEmailError({ showing: true, msg: add.error?.message as string })
       }
     }
   }
@@ -235,9 +229,75 @@ const ChatPage = () => {
       updateViewInChat()
     }
 
-  }, [userData.chats, openedChat])
+  }, [userData.chats, openedChat, chatsData])
 
 
+
+  return (
+    <S.Container className={`${!leftToggler ? 'mobileClosed' : ''}`}>
+      {inMobile &&
+        <S.BgLeft>
+          <Left
+            userOptionsOpened={userOptionsOpened}
+            setUserOptionsOpened={setUserOptionsOpened}
+            chatFilter={chatFilter}
+            setChatFilter={setChatFilter}
+            userData={userData}
+            chatsList={chatsList}
+            pickedChat={pickedChat}
+            handleChatPick={handleChatPick}
+            getAllChats={getAllChats}
+            getOtherChatsEls={getOtherChatsEls}
+            newEmailChat={newEmailChat}
+            handleNewEmailInput={handleNewEmailInput}
+            emailError={emailError}
+            addChatOpened={addChatOpened}
+            setAddChatOpened={setAddChatOpened}
+            handleDelChat={handleDelChat}
+            handleNewChat={handleNewChat}
+            setNewEmailChat={setNewEmailChat}
+            leftToggler={leftToggler}
+            setLeftToggler={setLeftToggler}
+          />
+        </S.BgLeft>
+      }
+      {!inMobile &&
+        <Left
+          userOptionsOpened={userOptionsOpened}
+          setUserOptionsOpened={setUserOptionsOpened}
+          chatFilter={chatFilter}
+          setChatFilter={setChatFilter}
+          userData={userData}
+          chatsList={chatsList}
+          pickedChat={pickedChat}
+          handleChatPick={handleChatPick}
+          getAllChats={getAllChats}
+          getOtherChatsEls={getOtherChatsEls}
+          newEmailChat={newEmailChat}
+          handleNewEmailInput={handleNewEmailInput}
+          emailError={emailError}
+          addChatOpened={addChatOpened}
+          setAddChatOpened={setAddChatOpened}
+          handleDelChat={handleDelChat}
+          handleNewChat={handleNewChat}
+          setNewEmailChat={setNewEmailChat}
+          leftToggler={leftToggler}
+          setLeftToggler={setLeftToggler}
+        />
+      }
+
+      {openedChat && pickedChat &&
+        <ChatArea chat={openedChat} chatName={chatsList[pickedChat.key]?.chatName ?? ''} />
+      }
+    </S.Container>
+  )
+
+}
+
+
+export default ChatPage
+
+/*
 
   return (
     <S.Container className={`${!leftToggler ? 'mobileClosed' : ''}`}>
@@ -448,6 +508,11 @@ const ChatPage = () => {
                 value={newEmailChat}
                 onChange={e => handleNewEmailInput(e.target.value)}
               />
+              <S.NewChatErrorText
+                style={{ opacity: emailError.showing ? 1 : 0 }}
+              >
+                {emailError.msg}
+              </S.NewChatErrorText>
             </S.AddChatBtnInputArea>
 
             <S.AddChatBtnBtnsArea>
@@ -486,8 +551,4 @@ const ChatPage = () => {
       }
     </S.Container>
   )
-
-}
-
-
-export default ChatPage
+*/

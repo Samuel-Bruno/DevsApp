@@ -2,20 +2,10 @@ import React from 'react'
 import * as S from './styled'
 import { ReactComponent as ChatOptionsIcon } from '../../assets/icons/chat-options.svg'
 import { ReactComponent as ImageIcon } from '../../assets/icons/image.svg'
+import ChatItemProps from '../../types/components/ChatItem'
 
 
-type Props = {
-  active: boolean;
-  photoUrl: string;
-  chatName: string;
-  chatLastMsg: string;
-  chatLastMsgType: string;
-  onClick: () => void;
-  delChat: () => void;
-}
-
-
-const ChatItem = ({ active, photoUrl, chatName, chatLastMsg, chatLastMsgType, onClick, delChat }: Props) => {
+const ChatItem = ({ active, photoUrl, chatName, chatLastMsg, chatLastMsgType, onClick, delChat }: ChatItemProps) => {
 
   const handleChatOption = (e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
     const optionsArea = e.currentTarget.parentElement

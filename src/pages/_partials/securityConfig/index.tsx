@@ -3,18 +3,11 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useApi from '../../../api/api'
 import ConfigInput from '../../../components/ConfigInput'
+import SecurityConfigProps from '../../../types/pages/_partials/SecurityConfig'
 import * as S from './styled'
 
-type Props = {
-  actualPass: string;
-  setActualPassFn: (t: string) => void;
-  pass: string;
-  setPassFn: (t: string) => void;
-  pass2: string;
-  setPass2Fn: (t: string) => void;
-}
 
-const SecurityConfig = ({ actualPass, setActualPassFn, pass, setPassFn, pass2, setPass2Fn }: Props) => {
+const SecurityConfig = ({ actualPass, setActualPassFn, pass, setPassFn, pass2, setPass2Fn }: SecurityConfigProps) => {
 
   const Api = useApi()
   const Auth = getAuth()

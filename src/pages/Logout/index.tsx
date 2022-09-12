@@ -10,23 +10,23 @@ const Logout = () => {
   const Api = useApi()
   const dispatch = useDispatch()
 
-  useEffect(()=>{
+  useEffect(() => {
     const fn = async () => {
       dispatch({
-        type:'LOGOUT_USER',
-        payload:{
-          data:{}
+        type: 'LOGOUT_USER',
+        payload: {
+          data: {}
         }
       })
       await Api.logout()
     }
     fn()
-  },[])
+  }, [])
 
   return (
     <Navigate to={'/login'} replace />
   )
-  
+
 }
 
 

@@ -1,24 +1,15 @@
 import React from 'react'
+import ConfigPhotoInputProps from '../../types/components/ConfigPhotoInput'
 import * as S from './styled'
-
-type Props = {
-  title: string;
-  img: string;
-  choosedPhotoFile: File | null;
-  setChoosedPhotoFile: (f: File) => void
-  choosedPhotoUrl: string | null;
-  setChoosedPhotoUrl: (t: string) => void;
-}
 
 
 const ConfigPhotoInput = ({
   title,
   img,
-  choosedPhotoFile,
   setChoosedPhotoFile,
   choosedPhotoUrl,
   setChoosedPhotoUrl,
-}: Props) => {
+}: ConfigPhotoInputProps) => {
 
   const pickPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const el = e.target

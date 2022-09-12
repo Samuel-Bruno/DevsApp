@@ -7,17 +7,10 @@ import { useSelector } from 'react-redux'
 import { RootState } from '../../../redux/store'
 import useApi from '../../../api/api'
 import { useNavigate } from 'react-router-dom'
-
-type Props = {
-  name: string;
-  setNameFn: (t: string) => void;
-  email: string;
-  setEmailFn: (t: string) => void;
-  profilePhoto: string;
-}
+import PersonalConfigProps from '../../../types/pages/_partials/PersonalConfig'
 
 
-const PersonalConfig = ({ name, setNameFn, email, setEmailFn, profilePhoto }: Props) => {
+const PersonalConfig = ({ name, setNameFn, email, setEmailFn, profilePhoto }: PersonalConfigProps) => {
 
   const Api = useApi()
   const navigation = useNavigate()
@@ -66,7 +59,6 @@ const PersonalConfig = ({ name, setNameFn, email, setEmailFn, profilePhoto }: Pr
       <ConfigPhotoInput
         title="Foto de perfil"
         img={profilePhoto}
-        choosedPhotoFile={choosedPhotoFile}
         setChoosedPhotoFile={setChoosedPhotoFile}
         choosedPhotoUrl={choosedPhotoUrl}
         setChoosedPhotoUrl={setChoosedPhotoUrl}

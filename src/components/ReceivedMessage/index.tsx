@@ -1,15 +1,10 @@
 import React from 'react'
 import * as S from './styled'
 import { ReactComponent as RecBoxDetail } from '../../assets/icons/recBoxDetail.svg'
-import { Message } from '../../types/chat/messages';
-
-type Props = {
-  msg: Message;
-  wDetail: boolean;
-}
+import MessageComponentProps from '../../types/components/MessageComponent';
 
 
-const ReceivedMessage = ({ msg, wDetail }: Props) => {
+const ReceivedMessage = ({ msg, wDetail }: MessageComponentProps) => {
 
 
   return (msg.type === 'text') ? (

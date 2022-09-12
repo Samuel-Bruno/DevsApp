@@ -1,6 +1,6 @@
 import React from 'react'
 import { useStore } from 'react-redux';
-import { Navigate, Route, useLocation } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import useApi from '../api/api';
 import getStateProperty from '../redux/getStateProperty';
 

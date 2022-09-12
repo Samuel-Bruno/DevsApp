@@ -1,16 +1,9 @@
 import React from 'react'
+import ConfigMenuItemProps from '../../types/components/ConfigMenuItem'
 import * as S from './styled'
 
-type Props = {
-  Icon: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
-  label: string;
-  active: boolean;
-  onClick: () => void
-}
 
-
-const ConfigMenuItem = ({ Icon, label, active, onClick }: Props) => {
-
+const ConfigMenuItem = ({ Icon, label, active, onClick }: ConfigMenuItemProps) => {
 
 
   return (

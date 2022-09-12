@@ -73,11 +73,20 @@ export const Aside = styled.aside`
   }
 `
 
+export const ErrorArea = styled.div`
+  background-color:rgba(255,30,30,.5);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin:20px auto 0px;
+  padding:10px 20px;
+`
+
 export const Form = styled.form`
   display:flex;
   flex-direction:column;
   align-items:center;
-  margin-top:45px;
+  margin-top:25px;
   color:white;
 
   a#link {
@@ -95,7 +104,7 @@ export const FormInput = styled.input`
   outline:none;
   border:none;
   border-bottom:1px solid rgba(222, 108, 43, 1);
-  margin-bottom:30px;
+  margin-bottom:18px;
 
   text-indent:15px;
   font-size:18px;

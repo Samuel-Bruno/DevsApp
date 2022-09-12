@@ -8,18 +8,12 @@ import ReceivedMessage from "../ReceivedMessage"
 import { useSelector } from "react-redux"
 import { RootState } from "../../redux/store"
 import useApi from "../../api/api"
-import { ChatInfo } from "../../types/reducers/chatsReducer"
 
 import Picker from 'emoji-picker-react'
+import ChatAreaProps from "../../types/components/ChatArea"
 
 
-type Props = {
-  chat: ChatInfo;
-  chatName: string;
-}
-
-
-const ChatArea = ({ chat, chatName }: Props) => {
+const ChatArea = ({ chat, chatName }: ChatAreaProps) => {
 
   const Api = useApi()
 

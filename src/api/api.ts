@@ -83,17 +83,10 @@ const useApi = () => {
       await signInWithEmailAndPassword(Auth, email, password)
         .then(async (cred: UserCredential) => {
           const userDoc = await getDocFromServer(doc(usersRef, cred.user.uid))
-          if (userDoc.exists()) {
-            res.user = await getUserObj(cred, userDoc.data() as UserInFirestore)
-          } else {
-            res = {
-              success: false,
-              error: { code: 'login/user-dont-exists', message: '' }
-            }
-          }
+          res.user = await getUserObj(cred, userDoc.data() as UserInFirestore)
         })
         .catch(error => {
-          res = { success: false, error: { message: error.message, code: error.code } }
+          res = { success: false, error }
         })
 
       return res

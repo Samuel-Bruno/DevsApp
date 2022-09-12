@@ -29,7 +29,7 @@ const Config = () => {
   useEffect(() => {
     setName(userData.name)
     setEmail(userData.email)
-  }, [])
+  }, [userData.email, userData.name])
 
   const backPage = () => {
     navigation(-1)

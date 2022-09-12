@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useDispatch } from 'react-redux'
 import { Navigate } from 'react-router-dom'
 import useApi from '../../api/api'
@@ -7,8 +7,8 @@ import useApi from '../../api/api'
 
 const Logout = () => {
 
-  const Api = useApi()
-  const dispatch = useDispatch()
+  const Api = useRef(useApi()).current
+  const dispatch = useRef(useDispatch()).current
 
   useEffect(() => {
     const fn = async () => {
@@ -21,7 +21,7 @@ const Logout = () => {
       await Api.logout()
     }
     fn()
-  }, [])
+  }, [Api, dispatch])
 
   return (
     <Navigate to={'/login'} replace />

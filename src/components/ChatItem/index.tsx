@@ -14,7 +14,7 @@ const ChatItem = ({ active, photoUrl, chatName, chatLastMsg, chatLastMsgType, on
 
   const handleBoxClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     let togglerIcon = e.currentTarget.querySelector(".optionsArea svg")
-    if (togglerIcon && (e.target != togglerIcon)) onClick()
+    if (togglerIcon && (e.target !== togglerIcon)) onClick()
   }
 
   const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {

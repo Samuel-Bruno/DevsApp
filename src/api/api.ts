@@ -49,7 +49,7 @@ const useApi = () => {
           const token = await cred.user.getIdToken()
 
           const userObj = {
-            avatar: await getDownloadURL(ref(storage, `profilesPhotos/default_user.jpg`)),
+            avatar: 'default_user.jpg',
             chats: [],
             email: cred.user.email,
             name: name

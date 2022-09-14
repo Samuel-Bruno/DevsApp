@@ -10,7 +10,7 @@ export const Main = styled.div`
   flex:1;
   
   h1 {
-    margin:60px auto 0;
+    margin:90px auto 0;
 
     text-align:center;
     font-size:48px;
@@ -19,9 +19,10 @@ export const Main = styled.div`
 
   p {
     width:100%;
-    max-width:67%;
-    margin:65px auto 0;
+    max-width:60%;
+    margin:90px auto 0;
     white-space:pre-wrap;
+    text-align:center;
 
     font-size:18px;
   }

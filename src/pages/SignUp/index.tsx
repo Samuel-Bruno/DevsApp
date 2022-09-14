@@ -95,10 +95,8 @@ const SignUp = () => {
       <S.Main>
         <h1>DevsApp</h1>
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean consequat sapien arcu, eu blandit magna interdum quis. Aenean id eros maximus, interdum nibh non, consequat lacus.
-          <br />
-          <br />
-          Phasellus pellentesque dolor lacus, sit amet consectetur erat vestibulum quis. Nam sit amet consectetur velit. Curabitur pulvinar velit eu eros maximus tincidunt.</p>
+          Seu chat simples e objetivo, para se conectar com seus amigos.😁
+        </p>
       </S.Main>
       <S.Aside>
         <h3>Cadastro</h3>

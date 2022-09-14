@@ -21,7 +21,7 @@ Project language: Brazilian Portuguese (PT-BR)
 - <img src="https://reactrouter.com/favicon-light.png" alt="React Router Dom" width="20" /> React Router Dom
 
 ## How to use
-- See a model using this [link](https://google.com.br)
+- See a model using this [link](https://devsapp.netlify.app)
 - Run on your machine
     1. Clone this repo
         > `git clone https://github.com/Samuel-Bruno/DevsApp`

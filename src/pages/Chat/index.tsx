@@ -137,7 +137,7 @@ const ChatPage = () => {
       setOpenedChat(null)
     }
 
-    // await Api.delChat(chat.chatId, userData.id)
+    await Api.delChat(chat.chatId, userData.id)
   }
 
   const getOtherChatsEls = (pickedId: string, filter?: string) => {

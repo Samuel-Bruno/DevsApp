@@ -13,8 +13,13 @@ const ChatItem = ({ active, photoUrl, chatName, chatLastMsg, chatLastMsgType, on
   }
 
   const handleBoxClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    let togglerIcon = e.currentTarget.querySelector(".optionsArea svg")
-    if (togglerIcon && (e.target !== togglerIcon)) onClick()
+    const togglerIcon = e.currentTarget.querySelector(".optionsArea svg")
+    const quitBtn = e.currentTarget.querySelector(".quitChatBtn")
+    const quitChatBtnSpan = e.currentTarget.querySelector(".quitChatBtnSpan")
+
+    if (e.target !== togglerIcon) {
+      if (e.target !== quitBtn && e.target !== quitChatBtnSpan) onClick()
+    }
   }
 
   const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -50,8 +55,8 @@ const ChatItem = ({ active, photoUrl, chatName, chatLastMsg, chatLastMsgType, on
       <S.OptionsArea className='optionsArea'>
         <ChatOptionsIcon width={8} height={16} onClick={(e) => handleChatOption(e)} />
         <S.ChatOptionsList className='optionsList'>
-          <S.ChatOption onClick={delChat}>
-            <span>Sair do chat</span>
+          <S.ChatOption onClick={delChat} className="quitChatBtn">
+            <span className="quitChatBtnSpan">Sair do chat</span>
           </S.ChatOption>
         </S.ChatOptionsList>
       </S.OptionsArea>

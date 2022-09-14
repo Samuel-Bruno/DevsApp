@@ -130,12 +130,14 @@ const ChatPage = () => {
   }
 
   const handleDelChat = async (chat: Chat) => {
-    if (chat.chatId === openedChat?.id) setOpenedChat(null)
-    if (chat.chatId === pickedChat?.id) setPickedChat(null)
-
     dispatch({ type: 'DELETE_USER_CHAT', payload: { chatId: chat.chatId } })
 
-    await Api.delChat(chat.chatId, userData.id)
+    if (chat.chatId === pickedChat?.id) {
+      setPickedChat(null)
+      setOpenedChat(null)
+    }
+
+    // await Api.delChat(chat.chatId, userData.id)
   }
 
   const getOtherChatsEls = (pickedId: string, filter?: string) => {
@@ -219,7 +221,9 @@ const ChatPage = () => {
 
     setChatsList(userData.chats)
     if (openedChat) {
-      setPickedChat({ id: openedChat.id as string, key: userData.chats.findIndex(c => c.chatId === openedChat?.id) })
+      let i = userData.chats.findIndex(c => c.chatId === openedChat?.id)
+      if (i > -1) setPickedChat({ id: openedChat.id as string, key: i })
+      
       const updateViewInChat = (chat?: Chat) => {
         let chatItem = (chat) ?
           chatsData.find(c => c.id === chat?.chatId) :
@@ -230,7 +234,6 @@ const ChatPage = () => {
     }
 
   }, [userData.chats, openedChat, chatsData])
-
 
 
   return (
@@ -296,259 +299,3 @@ const ChatPage = () => {
 
 
 export default ChatPage
-
-/*
-
-  return (
-    <S.Container className={`${!leftToggler ? 'mobileClosed' : ''}`}>
-      {inMobile &&
-        <S.BgLeft>
-          <S.Left>
-            <S.UserArea svgInvertion={userOptionsOpened}>
-
-              <S.InfoArea>
-                <S.UserPhoto src={`${userData.avatar}`} />
-                <S.UserInfo>
-                  <S.UserName>{userData.name ?? ''}</S.UserName>
-                  <S.UserEmail>{userData.email ?? ''}</S.UserEmail>
-                </S.UserInfo>
-              </S.InfoArea>
-              <ArrowDownIcon width={24} height={24} onClick={() => setUserOptionsOpened(!userOptionsOpened)} />
-
-              <S.UserOptions className={userOptionsOpened ? 'active' : ''}>
-
-                <Link to={'/config'}>
-                  <SettingsIcon width={24} height={24} />
-                  <span>Configurações</span>
-                </Link>
-
-                <Link to={'/logout'}>
-                  <LogoutIcon width={24} height={24} />
-                  <span>Sair</span>
-                </Link>
-              </S.UserOptions>
-            </S.UserArea>
-
-            <S.SearchArea>
-              <S.SearchInput
-                placeholder='Pesquisar...'
-                value={chatFilter}
-                onChange={e => setChatFilter(e.target.value)}
-              />
-              <SearchIcon width={24} height={24} />
-            </S.SearchArea>
-
-            <S.ChatsArea>
-              {chatsList.length > 0 && pickedChat !== null &&
-                <OpenedChatIndicator
-                  width={40} height={40}
-                  id="chatIndicator"
-                  fillOpacity={inMobile ? 0 : 1}
-                />
-              }
-              <S.OpenedChatArea>
-                {chatsList.length > 0 && pickedChat !== null &&
-                  <ChatItem
-                    active={true}
-                    photoUrl={chatsList[pickedChat.key].photoUrl}
-                    chatName={chatsList[pickedChat.key].chatName}
-                    chatLastMsg={chatsList[pickedChat.key].chatLastMsg}
-                    chatLastMsgType={chatsList[pickedChat.key].chatLastMsgType}
-                    onClick={() => handleChatPick(chatsList[pickedChat.key], pickedChat.key)}
-                    delChat={() => handleDelChat(chatsList[pickedChat.key])}
-                  />
-                }
-              </S.OpenedChatArea>
-
-              <S.OthersChatsArea>
-                {chatsList.length > 0 &&
-                  (pickedChat == null) ?
-                  (chatFilter) ? getAllChats(chatFilter) : getAllChats() :
-                  (pickedChat !== null) && chatsList.length > 1 &&
-                  <S.OthersChatsArea>
-                    <h3>Outros chats</h3>
-                    {chatFilter === '' &&
-                      getOtherChatsEls(pickedChat.id)
-                    } {chatFilter !== '' &&
-                      getOtherChatsEls(pickedChat.id, chatFilter)
-                    }
-                  </S.OthersChatsArea>
-                }
-                {chatsList.length === 0 &&
-                  <>Você não tem nenhum chat em aberto</>
-                }
-              </S.OthersChatsArea>
-            </S.ChatsArea>
-
-            <S.AddChatBtn className={addChatOpened ? 'opened' : ''}>
-
-              <S.AddChatBtnInputArea>
-                <span>Email</span>
-                <S.AddChatBtnEmailInput
-                  placeholder='Digite o email do contato'
-                  value={newEmailChat}
-                  onChange={e => handleNewEmailInput(e.target.value)}
-                />
-              </S.AddChatBtnInputArea>
-
-              <S.AddChatBtnBtnsArea>
-
-                <S.CancelBtn
-                  className='addChatBtn'
-                  onClick={() => { setAddChatOpened(!addChatOpened); setNewEmailChat('') }}
-                >
-                  <AddIcon width={24} height={24} className='addChatIcon' />
-                  <span>Cancelar</span>
-                </S.CancelBtn>
-
-                <S.ConfirmBtn
-                  className='confirmAddChatBtn'
-                  onClick={handleNewChat}
-                >
-                  <ConfirmAddIcon width={24} height={24} />
-                  <span>Add</span>
-                </S.ConfirmBtn>
-
-              </S.AddChatBtnBtnsArea>
-
-            </S.AddChatBtn>
-
-            <S.AreaToggler className={leftToggler ? 'active' : ''} onClick={() => setLeftToggler(!leftToggler)}>
-              <span></span>
-              <span></span>
-              <span></span>
-            </S.AreaToggler>
-
-          </S.Left>
-        </S.BgLeft>
-      }
-      {!inMobile &&
-        <S.Left>
-          <S.UserArea svgInvertion={userOptionsOpened}>
-
-            <S.InfoArea>
-              <S.UserPhoto src={`${userData.avatar}`} />
-              <S.UserInfo>
-                <S.UserName>{userData.name ?? ''}</S.UserName>
-                <S.UserEmail>{userData.email ?? ''}</S.UserEmail>
-              </S.UserInfo>
-            </S.InfoArea>
-            <ArrowDownIcon width={24} height={24} onClick={() => setUserOptionsOpened(!userOptionsOpened)} />
-
-            <S.UserOptions className={userOptionsOpened ? 'active' : ''}>
-
-              <Link to={'/config'}>
-                <SettingsIcon width={24} height={24} />
-                <span>Configurações</span>
-              </Link>
-
-              <Link to={'/logout'}>
-                <LogoutIcon width={24} height={24} />
-                <span>Sair</span>
-              </Link>
-            </S.UserOptions>
-          </S.UserArea>
-
-          <S.SearchArea>
-            <S.SearchInput
-              placeholder='Pesquisar...'
-              value={chatFilter}
-              onChange={e => setChatFilter(e.target.value)}
-            />
-            <SearchIcon width={24} height={24} />
-          </S.SearchArea>
-
-          <S.ChatsArea>
-            {chatsList.length > 0 && pickedChat !== null &&
-              <OpenedChatIndicator
-                width={40} height={40}
-                id="chatIndicator"
-              />
-            }
-            <S.OpenedChatArea>
-              {chatsList.length > 0 && pickedChat !== null &&
-                <ChatItem
-                  active={true}
-                  photoUrl={chatsList[pickedChat.key].photoUrl}
-                  chatName={chatsList[pickedChat.key].chatName}
-                  chatLastMsg={chatsList[pickedChat.key].chatLastMsg}
-                  chatLastMsgType={chatsList[pickedChat.key].chatLastMsgType}
-                  onClick={() => handleChatPick(chatsList[pickedChat.key], pickedChat.key)}
-                  delChat={() => handleDelChat(chatsList[pickedChat.key])}
-                />
-              }
-            </S.OpenedChatArea>
-
-            <S.OthersChatsArea>
-              {chatsList.length > 0 &&
-                (pickedChat == null) ?
-                (chatFilter) ? getAllChats(chatFilter) : getAllChats() :
-                (pickedChat !== null) && chatsList.length > 1 &&
-                <S.OthersChatsArea>
-                  <h3>Outros chats</h3>
-                  {chatFilter === '' &&
-                    getOtherChatsEls(pickedChat.id)
-                  } {chatFilter !== '' &&
-                    getOtherChatsEls(pickedChat.id, chatFilter)
-                  }
-                </S.OthersChatsArea>
-              }
-              {chatsList.length === 0 &&
-                <>Você não tem nenhum chat em aberto</>
-              }
-            </S.OthersChatsArea>
-          </S.ChatsArea>
-
-          <S.AddChatBtn className={addChatOpened ? 'opened' : ''}>
-
-            <S.AddChatBtnInputArea>
-              <span>Email</span>
-              <S.AddChatBtnEmailInput
-                placeholder='Digite o email do contato'
-                value={newEmailChat}
-                onChange={e => handleNewEmailInput(e.target.value)}
-              />
-              <S.NewChatErrorText
-                style={{ opacity: emailError.showing ? 1 : 0 }}
-              >
-                {emailError.msg}
-              </S.NewChatErrorText>
-            </S.AddChatBtnInputArea>
-
-            <S.AddChatBtnBtnsArea>
-
-              <S.CancelBtn
-                className='addChatBtn'
-                onClick={() => { setAddChatOpened(!addChatOpened); setNewEmailChat('') }}
-              >
-                <AddIcon width={24} height={24} className='addChatIcon' />
-                <span>Cancelar</span>
-              </S.CancelBtn>
-
-              <S.ConfirmBtn
-                className='confirmAddChatBtn'
-                onClick={handleNewChat}
-              >
-                <ConfirmAddIcon width={24} height={24} />
-                <span>Add</span>
-              </S.ConfirmBtn>
-
-            </S.AddChatBtnBtnsArea>
-
-          </S.AddChatBtn>
-
-          <S.AreaToggler className={leftToggler ? 'active' : ''} onClick={() => setLeftToggler(!leftToggler)}>
-            <span></span>
-            <span></span>
-            <span></span>
-          </S.AreaToggler>
-
-        </S.Left>
-      }
-
-      {openedChat && pickedChat &&
-        <ChatArea chat={openedChat} chatName={chatsList[pickedChat.key]?.chatName ?? ''} />
-      }
-    </S.Container>
-  )
-*/

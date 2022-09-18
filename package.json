@@ -13,7 +13,6 @@
     "@types/react-dom": "^18.0.6",
     "emoji-picker-react": "^3.6.1",
     "firebase": "^9.9.1",
-    "immer": "^9.0.15",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-redux": "^8.0.2",

@@ -59,4 +59,4 @@ This page is divided in two areas. The personal and security area, that allows t
 ## Observations
 
 The project is not concluded. It have yet to do:
-- fix bugs when quiting chat. The chats list is not updating correctly and the messages area is still showing
+- delete account
